@@ -826,19 +826,19 @@ Function  New-InfoBloxResourceRecord  {
         Write-Verbose  $ReqUri
         
         try  {
-            #  $TempResult  =  Invoke-RestMethod  @IRMParams
-            $IRMParams
-            $JSON
+            $TempResult  =  Invoke-RestMethod  @IRMParams
+            # $IRMParams
+            # $JSON
         }
         catch  {
             Throw  "Error  retrieving  record:  $_"
         }
-        <#  
+          
         if  (  $TempResult.StatusCode  -ne  201  )  {
             Write-Error  "Failed  to  write  record  to  InfoBlox"
             return
         }
-        #>
+        
         if  (  $PassThru  )  {
             $TempResult  |  Add-Member  -Type  NoteProperty  -Name  IBSession  -Value  $IBSession
         }
