@@ -49,7 +49,7 @@ Function New-InfoBloxResourceRecord {
         $RecordType = "A",
         
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
-        [Parameter(Mandatory=$True,ParameterSetName="Credential")]
+        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
         $Uri = $Script:InfobloxBaseUri,
         
