@@ -34,9 +34,11 @@
     <Folder Include="public\test\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="public\Get-InfoBloxConfig.ps1" />
     <Compile Include="public\Get-InfoBloxResourceRecordSet.ps1" />
     <Compile Include="PSInfoBlox.psd1" />
     <Compile Include="PSInfoBlox.psm1" />
+    <Compile Include="public\Set-InfoBloxConfig.ps1" />
     <Compile Include="Tests\PSInfoBlox.tests.ps1" />
     <Compile Include="public\New-InfoBloxResourceRecord.ps1" />
     <Compile Include="public\New-InfoBloxSession.ps1" />

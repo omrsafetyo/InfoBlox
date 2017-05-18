@@ -26,7 +26,7 @@ Function Get-InfoBloxResourceRecordSet {
         .PARAMETER Credential
         Credential object with user Id and password for creating an InfoBlox Grid session.
         
-        .PARAMETER InfoBloxServer
+        .PARAMETER IBServer
         Passed to the New-InfoBlox session function if a Credential is specified instead of a session.
         
         .PARAMETER PageSize
@@ -61,16 +61,16 @@ Function Get-InfoBloxResourceRecordSet {
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
-        $Uri = $Script:InfobloxBaseUri,
+        $Uri =  $Script:IBConfig.Uri,
         
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
-        $IBVersion = $Script:InfoBloxVersion,
+        $IBVersion = $Script:IBConfig.IBVersion,
         
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Microsoft.PowerShell.Commands.WebRequestSession]
-        $IBSession = $Script:InfoBloxSession,
+        $IBSession = $Script:IBConfig.IBSession,
         
         [Parameter(Mandatory=$True,ParameterSetName="Credential")]
         [System.Management.Automation.PSCredential]
@@ -78,7 +78,7 @@ Function Get-InfoBloxResourceRecordSet {
         
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
-        $InfoBloxServer,
+        $IBServer,
         
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
@@ -107,21 +107,24 @@ Function Get-InfoBloxResourceRecordSet {
     BEGIN {
         # If Credential was specified, we can use that to initiate the InfoBlox session. 
         # build a params hashtable to splat to the New-InfoBloxSession function
-        if ( $PSCmldet.ParameterSetName -eq "Credential" ) {
+        if ( $PSCmdlet.ParameterSetName -eq "Credential" ) {
             $Params = @{
                 Credential = $Credential
                 PassThru = $True
             }
             
             if ( $PSBoundParameters.ContainsKey("IBVersion")) {
-                 $Params.Add('Version',$IBVersion) 
+                 $Params.Add('IBVersion',$IBVersion) 
             }
             
-            if ( $PSBoundParameters.ContainsKey("InfoBloxServer")) {
-                 $Params.Add('InfoBloxServer',$InfoBloxServer) 
+            if ( $PSBoundParameters.ContainsKey("IBServer")) {
+                 $Params.Add('IBServer',$IBServer) 
             }
-            
+
+            Write-Host "Building session since Credentials were specified."
             $IBSession = New-InfoBloxSession @Params
+			$Script:IBConfig = Get-InfoBloxConfig
+			$Uri = $Script:IBConfig.Uri
         }
         
         $exactQualityArr = @("text","creator","reclaimable","port")                # =
@@ -134,6 +137,9 @@ Function Get-InfoBloxResourceRecordSet {
     }
     
     PROCESS {
+		$msg = "ParameterSetName is {0}" -f $PSCmdlet.ParameterSetName
+		Write-Host $msg
+		Write-Host "Uri is $Uri"
         $BaseUri = "{0}/record:{1}" -f $Uri, $RecordType.ToLower()
         $NextPageID = "NotStarted"
         

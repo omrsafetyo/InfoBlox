@@ -24,7 +24,7 @@ Function New-InfoBloxResourceRecord {
         .PARAMETER Credential
         Credential object with user Id and password for creating an InfoBlox Grid session.
         
-        .PARAMETER InfoBloxServer
+        .PARAMETER IBServer
         Passed to the New-InfoBlox session function if a Credential is specified instead of a session.
         
         .PARAMETER Passthru
@@ -51,16 +51,16 @@ Function New-InfoBloxResourceRecord {
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
-        $Uri = $Script:InfobloxBaseUri,
+        $Uri = $Script:IBConfig.Uri,
         
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
-        $IBVersion = $Script:InfoBloxVersion,
+        $IBVersion = $Script:IBConfig.IBVersion,
         
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Microsoft.PowerShell.Commands.WebRequestSession]
-        $IBSession = $Script:InfoBloxSession,
+        $IBSession = $Script:IBConfig.IBSession,
         
         [Parameter(Mandatory=$True,ParameterSetName="Credential")]
         [System.Management.Automation.PSCredential]
@@ -68,7 +68,7 @@ Function New-InfoBloxResourceRecord {
         
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
-        $InfoBloxServer,
+        $IBServer,
         
         [switch]
         $PassThru
@@ -452,12 +452,12 @@ Function New-InfoBloxResourceRecord {
                  $Params.Add('Version',$IBVersion) 
             }
             
-            if ( $PSBoundParameters.ContainsKey("InfoBloxServer")) {
-                 $Params.Add('InfoBloxServer',$InfoBloxServer) 
+            if ( $PSBoundParameters.ContainsKey("IBServer")) {
+                 $Params.Add('IBServer',$IBServer) 
             }
             
             $IBSession = New-InfoBloxSession @Params -PassThru
-            $Uri = $Script:InfobloxBaseUri
+            $Uri = $Script:IBConfig.Uri
         }
     }
     

@@ -6,7 +6,7 @@ Function New-InfoBloxSession {
         .DESCRIPTION
             https://github.com/RamblingCookieMonster
             
-        .PARAMETER InfoBloxServer
+        .PARAMETER IBServer
             IP Address or FQDN/Hostname of the Infoblox server. If not IP, this must be DNS resolvable.
             
         .PARAMETER Version
@@ -15,38 +15,41 @@ Function New-InfoBloxSession {
             Default is 2.3
             
         .PARAMETER Credential
-            Credentials for the InfoBlox server. Should be in format username@domain.com 
+            Credentials for the InfoBlox server. Should be in format <username> - not domain\username or username@domain
+
     #>
     [CmdletBinding()]
     PARAM (
         [Parameter(Mandatory=$True)]
         [string]
-        $InfoBloxServer,
+        $IBServer,
         
         [Parameter(Mandatory=$False)]
         [string]
-        $Version = "2.3",
+        $IBVersion = "2.3",
         
         [Parameter(Mandatory=$True)]
         [System.Management.Automation.PSCredential]
         $Credential,
         
         [switch]
-        $PassThru
+        $PassThru,
+
+		[switch]
+		$NoConfigChange
     )
     
     BEGIN {
         Set-TrustAllCertsPolicy
-        $Script:InfoBloxServer = $InfoBloxServer
-        $Script:InfoBloxVersion = $InfoBloxVersion
     }
     
     PROCESS {
-        $BaseUri = "https://{0}/wapi/v{1}/grid" -f $InfoBloxServer, $Version
-        $Script:InfoBloxBaseUri = "https://{0}/wapi/v{1}" -f $InfoBloxServer, $Version
+        $GridUri = "https://{0}/wapi/v{1}/grid" -f $IBServer, $IBVersion
+        
+		Write-Host "GridUri is $GridUri"
         
         $Params = @{
-            Uri = $BaseUri
+            Uri = $GridUri
             Method = 'Get'
             Credential = $Credential
             SessionVariable = 'TempSession'
@@ -56,7 +59,7 @@ Function New-InfoBloxSession {
         try {
             #Run the command
             $Grid = Invoke-RestMethod @Params
-            $Script:GridName = ( $Grid._ref -split ":" )[-1]
+            $GridName = ( $Grid._ref -split ":" )[-1]
             Write-Verbose "Connected to grid '$GridName'"
         }
         catch {
@@ -66,8 +69,15 @@ Function New-InfoBloxSession {
         if ( $PassThru ) {
             $TempSession
         }
-        else {
-            $Script:InfoBloxSession = $TempSession
+
+        if ( -not $NoConfigChange ) {
+			$Uri = "https://{0}/wapi/v{1}" -f $IBServer, $IBVersion
+
+			Set-InfoBloxConfig -Uri $Uri -IBVersion $IBVersion -IBServer $IBServer
+            $Script:IBConfig.IBSession = $TempSession
+			$Script:IBConfig.Uri = $Uri
+			$Script:IBConfig.IBVersion = $IBVersion
+			$Script:IBConfig.IBServer = $IBServer
         }
     }
     

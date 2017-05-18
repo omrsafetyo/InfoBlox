@@ -36,6 +36,35 @@ ForEach ( $PublicFile in $PublicFiles ) {
 	}
 }
 
+# There is an error trying to reference [Microsoft.PowerShell.Commands.WebRequestSession] in a fresh session.
+# creating a dummy session, loading this type prevents the error.
+$session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+
+#Create / Read config
+if(-not (Test-Path -Path "$PSScriptRoot\public\Infoblox.xml" -ErrorAction SilentlyContinue)) {
+    Try {
+        Write-Warning "Did not find config file $PSScriptRoot\public\Infoblox.xml, attempting to create"
+        [pscustomobject]@{
+            Uri = $null
+            IBVersion = "2.3"
+        } | Export-Clixml -Path "$PSScriptRoot\public\Infoblox.xml" -Force -ErrorAction Stop
+    }
+    Catch {
+        Write-Warning "Failed to create config file $PSScriptRoot\public\Infoblox.xml: $_"
+    }
+}
+    
+#Initialize the config variable.
+Try {
+    #Import the config
+    $IBConfig = $null
+    $IBConfig = Get-InfoBloxConfig -Source Infoblox.xml -ErrorAction Stop | Select -Property Uri, IBVersion, IBSession
+
+}
+Catch {   
+    Write-Warning "Error importing IBConfig: $_"
+}
+
 <# 
 Get-Variable -Scope:Script | ForEach-Object {
 	Export-ModuleMember -Variable $_.Name
