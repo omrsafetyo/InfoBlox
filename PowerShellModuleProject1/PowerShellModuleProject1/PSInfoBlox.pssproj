@@ -6,7 +6,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>MyApplication</RootNamespace>
     <AssemblyName>MyApplication</AssemblyName>
-    <Name>InfoBlox</Name>
+    <Name>PSInfoBlox</Name>
     <ProjectHome />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -35,9 +35,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="public\Get-InfoBloxResourceRecordSet.ps1" />
-    <Compile Include="InfoBlox.psd1" />
-    <Compile Include="InfoBlox.psm1" />
-    <Compile Include="Tests\InfoBlox.tests.ps1" />
+    <Compile Include="PSInfoBlox.psd1" />
+    <Compile Include="PSInfoBlox.psm1" />
+    <Compile Include="Tests\PSInfoBlox.tests.ps1" />
     <Compile Include="public\New-InfoBloxResourceRecord.ps1" />
     <Compile Include="public\New-InfoBloxSession.ps1" />
     <Compile Include="private\Set-TrustAllCertsPolicy.ps1" />
