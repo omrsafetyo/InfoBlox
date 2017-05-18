@@ -18,14 +18,14 @@
 
 # private functions
 $PrivateDirectory = Join-Path -Path $PSScriptRoot -ChildPath private
-$PrivateFiles = Get-ChildItem -Path $PrivateDirectory | Where-Object { $_.Extension -eq ".ps1" }
+$PrivateFiles = Get-ChildItem -Path $PrivateDirectory -Filter "*.ps1" 
 ForEach ( $PrivateFile in $PrivateFiles ) {
 	. $PrivateFile.FullName
 }
 
 #public functions
 $PublicDirectory = Join-Path -Path $PSScriptRoot -ChildPath Public
-$PublicFiles = Get-ChildItem -Path $PublicDirectory | Where-Object { $_.Extension -eq ".ps1" }
+$PublicFiles = Get-ChildItem -Path $PublicDirectory -Filter "*.ps1" 
 ForEach ( $PublicFile in $PublicFiles ) {
 	try {
 		. $PublicFile.FullName
