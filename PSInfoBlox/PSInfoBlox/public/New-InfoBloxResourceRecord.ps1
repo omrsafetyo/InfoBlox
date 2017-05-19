@@ -37,6 +37,7 @@ Function New-InfoBloxResourceRecord {
         https://github.com/Infoblox-API/PowerShell/tree/master/examples
 
 		https://community.infoblox.com/t5/API-Integration/The-definitive-list-of-REST-examples/td-p/1214
+		https://ipam.illinois.edu/wapidoc/additional/sample.html
     #>
     [CmdletBinding(DefaultParameterSetName="Session")]
     param(

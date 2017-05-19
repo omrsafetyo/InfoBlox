@@ -1,0 +1,122 @@
+#
+# Remove_InfoBloxResourceRecord.ps1
+Function Remove-InfoBloxResourceRecord {
+    <#
+        .SYNOPSIS
+        Deletes a resource record from the InfoBlox server.
+        
+        .DESCRIPTION
+        
+        .PARAMETER Reference
+        The reference Uri to the record.
+        
+        .PARAMETER Uri
+        Specifies the InfoBlox REST server Base Uri. Not required if you are using sessions, and will default based on the default
+        specified in New-InfoBloxSession if not specified.
+        
+        .PARAMETER IBVersion
+        Specifies InfoBlox version. This is used for crafting the BaseUri in the New-InfoBloxSession function if 
+        Credentials are specified instead of a session.
+        
+        .PARAMETER IBSession
+        Created with the New-InfoBloxSession function. This commandlet will be run anyway if the credentials only are specified, 
+        in the begin block.
+        
+        .PARAMETER Credential
+        Credential object with user Id and password for creating an InfoBlox Grid session.
+        
+        .PARAMETER IBServer
+        Passed to the New-InfoBlox session function if a Credential is specified instead of a session.
+               
+        .PARAMETER Passthru
+        If specified, this switch will cause the IBSession created in this function to be pased to the pipeline in the output object, 
+        so it can be utilized, and not recreated in subsequent function calls.
+    #>
+    [CmdletBinding(DefaultParameterSetName="Session")]
+    param( 
+		[Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+		[Alias('_ref','ref')]
+        [string]
+        $Reference =  $Script:IBConfig.Uri,
+
+        [Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+        [string]
+        $Uri =  $Script:IBConfig.Uri,
+        
+        [Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+        [string]
+        $IBVersion = $Script:IBConfig.IBVersion,
+        
+        [Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Microsoft.PowerShell.Commands.WebRequestSession]
+        $IBSession = $Script:IBConfig.IBSession,
+        
+        [Parameter(Mandatory=$True,ParameterSetName="Credential")]
+        [System.Management.Automation.PSCredential]
+        $Credential,
+        
+        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+        [string]
+        $IBServer,
+        
+        [switch]
+        $PassThru
+    )
+    
+    BEGIN {
+		if (-not($PSBoundParameters.ContainsKey("Uri")) ) {
+			if ( [string]::IsNullOrEmpty($Uri) -and $PSCmdlet.ParameterSetName -eq "Credential" ) {
+				if ([string]::IsNullOrEmpty($IBServer) -or [string]::IsNullOrEmpty($IBVersion) ) {
+					throw "Unable to determine Uri for IBServer. Specify Uri, or IBVersion and IBServer."
+				}
+				$Uri = "https://{0}/wapi/v{1}" -f $IBServer, $IBVersion
+			}
+		}
+        Set-TrustAllCertsPolicy
+    }
+    
+    PROCESS {
+		$msg = "ParameterSetName is {0}" -f $PSCmdlet.ParameterSetName
+		Write-Verbose $msg
+		Write-Verbose "baseUri is $Uri"
+
+        $ReqUri = "{0}/{1}" -f $Uri, $Reference
+        
+		if ( $PSCmdlet.ParameterSetName -eq "Credential") {
+			$IRMParams = @{
+				Uri = $ReqUri
+				Method = 'Delete'
+				Credential = $Credential
+			}
+		}
+		else {
+			$IRMParams = @{
+				Uri = $ReqUri
+				Method = 'Delete'
+				WebSession = $IBSession
+			}
+		}
+        
+        Write-Verbose $ReqUri
+        
+        try {
+            $TempResult = Invoke-RestMethod @IRMParams
+        }
+        catch {
+            Throw "Error retrieving record: $_"
+        }
+
+        if ( $PassThru ) {
+            $TempResult | Add-Member -Type NoteProperty -Name IBSession -Value $IBSession
+        }
+        else 
+        {
+            $TempResult.result
+        }
+    }
+    
+    END {}
+}
