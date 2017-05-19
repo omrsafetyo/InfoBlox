@@ -43,24 +43,24 @@ Function New-InfoBloxResourceRecord {
         <#
             
         #>
-        [Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="IBSession")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         #[ValidateSet("A","AAAA","CName","DName","DNSKEY","DS","Host","LBDN","MX","NAPTR","NS","NSEC","NSEC3","NSEC3PARAM","PTR","RRSIG","SRV","TXT")]
         [ValidateSet("A","AAAA","CName","Host","Host_ipv4addr","Host_ipv6addr","LBDN","MX","NAPTR","PTR","SRV","TXT")]
         [string]
         $RecordType = "A",
         
-        [Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="IBSession")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
         $Uri = $Script:IBConfig.Uri,
         
-        [Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="IBSession")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
         $IBVersion = $Script:IBConfig.IBVersion,
         
-        [Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="IBSession")]
         [Microsoft.PowerShell.Commands.WebRequestSession]
         $IBSession = $Script:IBConfig.IBSession,
         
@@ -442,6 +442,7 @@ Function New-InfoBloxResourceRecord {
     BEGIN {
         # If Credential was specified, we can use that to initiate the InfoBlox session. 
         # build a params hashtable to splat to the New-InfoBloxSession function
+		<#
         if ( $PSCmldet.ParameterSetName -eq "Credential" ) {
             $Params = @{
                 Credential = $Credential
@@ -457,27 +458,36 @@ Function New-InfoBloxResourceRecord {
             }
             
             $IBSession = New-InfoBloxSession @Params -PassThru
-            $Uri = $Script:IBConfig.Uri
+            
         }
+		#>
+		if (-not($PSBoundParameters.ContainsKey("Uri")) ) {
+			if ( [string]::IsNullOrEmpty($Uri) -and $PSCmdlet.ParameterSetName -eq "Credential" ) {
+				if ([string]::IsNullOrEmpty($IBServer) -or [string]::IsNullOrEmpty($IBVersion) ) {
+					throw "Unable to determine Uri for IBServer. Specify Uri, or IBVersion and IBServer."
+				}
+				$Uri = "https://{0}/wapi/v{1}" -f $IBServer, $IBVersion
+			}
+		}
 		Set-TrustAllCertsPolicy
 		$arrays = @("ipv4addr","ipv6addr","aliases")
     }
     
     PROCESS {
         # build Url based on the record type
-        $ReqUri = "{0}/record:{1}?_return_fields" -f $Uri, $RecordType.ToLower()    
+        $ReqUri = "{0}/record:{1}?_return_fields%2b=name,zone,extattrs" -f $Uri, $RecordType.ToLower()    # %2b in place of +
         
         # We need to build the JSON Body from the Dynamic Parameters
         $ParamHash = @{}
         ForEach ( $DynamicParam in $DynamicParamList ) {
             if ( $PSBoundParameters.ContainsKey($DynamicParam) ) {
-                # if Host, ip4addr = ipv4addrs array.
+                # if Host, ip4addr = ipv4addrs array, etc.
 				if ( $arrays -contains $DynamicParam -and $RecordType -eq "Host" ) {
 					$Parent = "{0}s" -f $DynamicParam.ToLower()
 					$SubHash = @{
 						$DynamicParam.ToLower() = $PSBoundParameters[$DynamicParam]
 					}
-					$ParamHash.Add($Parent,@($SubHash))
+					$ParamHash.Add($Parent,[array]$SubHash)  # cast subhash as array, so it has the proper format.
 				}
 				else {
 					$ParamHash.Add($DynamicParam.ToLower(),$PSBoundParameters[$DynamicParam])
@@ -486,16 +496,27 @@ Function New-InfoBloxResourceRecord {
         }
         
         $JSON = $ParamHash | ConvertTo-Json
-        
-        $IRMParams = @{
-            Uri = $ReqUri
-            Method = 'Post'
-            WebSession = $IBSession
-			# Credential = $Credential
-            Body = $JSON
-            ContentType = "application/json"
-        }
-        
+        if ($PSCmdlet.ParameterSetName -eq "Credential" ) {
+			$IRMParams = @{
+				Uri = $ReqUri
+				Method = 'Post'
+				Credential = $Credential
+				Body = $JSON
+				ContentType = "application/json"
+			}
+		}
+		else {
+			$IRMParams = @{
+				Uri = $ReqUri
+				Method = 'Post'
+				WebSession = $IBSession
+				Body = $JSON
+				ContentType = "application/json"
+			}
+		}
+
+		$UsingParameterSet = "Using {0}" -f $PSCmdlet.ParameterSetName
+        Write-Verbose $UsingParameterSet
         Write-Verbose $ReqUri
 		Write-Verbose $JSON
         
