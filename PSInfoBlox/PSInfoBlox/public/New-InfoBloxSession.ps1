@@ -26,7 +26,7 @@ Function New-InfoBloxSession {
         
         [Parameter(Mandatory=$False)]
         [string]
-        $IBVersion = "2.3",
+        $IBVersion = $Script:IBConfig.IBVersion,
         
         [Parameter(Mandatory=$True)]
         [System.Management.Automation.PSCredential]

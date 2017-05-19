@@ -459,6 +459,7 @@ Function New-InfoBloxResourceRecord {
             $IBSession = New-InfoBloxSession @Params -PassThru
             $Uri = $Script:IBConfig.Uri
         }
+		Set-TrustAllCertsPolicy
     }
     
     PROCESS {
@@ -469,7 +470,7 @@ Function New-InfoBloxResourceRecord {
         $ParamHash = @{}
         ForEach ( $DynamicParam in $DynamicParamList ) {
             if ( $PSBoundParameters.ContainsKey($DynamicParam) ) {
-                $ParamHash.Add($DynamicParam,$PSBoundParameters[$DynamicParam])
+                $ParamHash.Add($DynamicParam.ToLower(),$PSBoundParameters[$DynamicParam])
             }
         }
         
@@ -479,31 +480,28 @@ Function New-InfoBloxResourceRecord {
             Uri = $ReqUri
             Method = 'Post'
             WebSession = $IBSession
+			# Credential = $Credential
             Body = $JSON
             ContentType = "application/json"
         }
         
         Write-Verbose $ReqUri
+		Write-Verbose $JSON
         
         try {
             $TempResult = Invoke-RestMethod @IRMParams
-            # $IRMParams
-            # $JSON
         }
         catch {
             Throw "Error retrieving record: $_"
         }
-         
-        if ( $TempResult.StatusCode -ne 201 ) {
-            Write-Error "Failed to write record to InfoBlox"
-            return
-        }
+        
+
         
         if ( $PassThru ) {
             $TempResult | Add-Member -Type NoteProperty -Name IBSession -Value $IBSession
         }
         else {
-            $TempResult.result
+            $TempResult
         }
     }
     
