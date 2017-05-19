@@ -35,6 +35,8 @@ Function New-InfoBloxResourceRecord {
         https://github.com/AWahlqvist/Infoblox-PowerShell-Module/tree/master/cmdlets
         https://github.com/RamblingCookieMonster/Infoblox/blob/master/Infoblox/Get-IBRecord.ps1
         https://github.com/Infoblox-API/PowerShell/tree/master/examples
+
+		https://community.infoblox.com/t5/API-Integration/The-definitive-list-of-REST-examples/td-p/1214
     #>
     [CmdletBinding(DefaultParameterSetName="Session")]
     param(
@@ -235,14 +237,15 @@ Function New-InfoBloxResourceRecord {
                     having to specify an A record and a PTR record separately for the same node. A host can also define aliases and DHCP
                     fixed address nodes. The zone must be created first before adding a host record for the zone.
                 #>
+				$attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $ipv4Address.Mandatory = $false        # set this to false, since IPv6 is allowed too
                 $attributeCollection.Add($ipv4Address)
                 $attributeCollection.Add($ipv4ValidatePatternAttribute)
                 $ipv4Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv4Addr', [string], $attributeCollection)
                 $paramDictionary.Add('IPv4Addr', $ipv4Param)
                 [void]$DynamicParamList.Add("IPv4Addr")
-                $ipv4Address.Mandatory = $true        # set this back
                 
+				$attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $ipv6Address.Mandatory = $false        # set this to false, since IPv4 is allowed too
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $attributeCollection.Add($ipv6Address)
@@ -250,7 +253,6 @@ Function New-InfoBloxResourceRecord {
                 $ipv6Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv6Addr', [string], $attributeCollection)
                 $paramDictionary.Add('IPv6Addr', $ipv6Param)
                 [void]$DynamicParamList.Add("IPv6Addr")
-                $ipv6Address.Mandatory = $true        # set this back
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $attributeCollection.Add($HostName)
@@ -367,7 +369,6 @@ Function New-InfoBloxResourceRecord {
                 $ipv4Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv4Addr', [string], $attributeCollection)
                 $paramDictionary.Add('IPv4Addr', $ipv4Param)
                 [void]$DynamicParamList.Add("IPv4Addr")
-                $ipv4Address.Mandatory = $true        # set this back
                 
                 $ipv6Address.Mandatory = $false
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
@@ -376,7 +377,6 @@ Function New-InfoBloxResourceRecord {
                 $ipv6Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv6Addr', [string], $attributeCollection)
                 $paramDictionary.Add('IPv6Addr', $ipv6Param)
                 [void]$DynamicParamList.Add("IPv6Addr")
-                $ipv6Address.Mandatory = $true        # set this back
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $attributeCollection.Add($PTRDName)
@@ -460,17 +460,28 @@ Function New-InfoBloxResourceRecord {
             $Uri = $Script:IBConfig.Uri
         }
 		Set-TrustAllCertsPolicy
+		$arrays = @("ipv4addr","ipv6addr","aliases")
     }
     
     PROCESS {
         # build Url based on the record type
-        $ReqUri = "{0}/record:{1}" -f $Uri, $RecordType.ToLower()    
+        $ReqUri = "{0}/record:{1}?_return_fields" -f $Uri, $RecordType.ToLower()    
         
         # We need to build the JSON Body from the Dynamic Parameters
         $ParamHash = @{}
         ForEach ( $DynamicParam in $DynamicParamList ) {
             if ( $PSBoundParameters.ContainsKey($DynamicParam) ) {
-                $ParamHash.Add($DynamicParam.ToLower(),$PSBoundParameters[$DynamicParam])
+                # if Host, ip4addr = ipv4addrs array.
+				if ( $arrays -contains $DynamicParam -and $RecordType -eq "Host" ) {
+					$Parent = "{0}s" -f $DynamicParam.ToLower()
+					$SubHash = @{
+						$DynamicParam.ToLower() = $PSBoundParameters[$DynamicParam]
+					}
+					$ParamHash.Add($Parent,@($SubHash))
+				}
+				else {
+					$ParamHash.Add($DynamicParam.ToLower(),$PSBoundParameters[$DynamicParam])
+				}
             }
         }
         
