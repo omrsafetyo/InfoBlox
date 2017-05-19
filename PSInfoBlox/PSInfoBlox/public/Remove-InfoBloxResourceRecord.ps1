@@ -6,6 +6,7 @@ Function Remove-InfoBloxResourceRecord {
         Deletes a resource record from the InfoBlox server.
         
         .DESCRIPTION
+		Deletes a resource record from the InfoBlox server.
         
         .PARAMETER Reference
         The reference Uri to the record.
@@ -15,12 +16,10 @@ Function Remove-InfoBloxResourceRecord {
         specified in New-InfoBloxSession if not specified.
         
         .PARAMETER IBVersion
-        Specifies InfoBlox version. This is used for crafting the BaseUri in the New-InfoBloxSession function if 
-        Credentials are specified instead of a session.
+        Specifies InfoBlox version. This is used for crafting the BaseUri if Credentials are specified instead of a session.
         
         .PARAMETER IBSession
-        Created with the New-InfoBloxSession function. This commandlet will be run anyway if the credentials only are specified, 
-        in the begin block.
+        Created with the New-InfoBloxSession function.
         
         .PARAMETER Credential
         Credential object with user Id and password for creating an InfoBlox Grid session.
@@ -34,33 +33,35 @@ Function Remove-InfoBloxResourceRecord {
     #>
     [CmdletBinding(DefaultParameterSetName="Session")]
     param( 
-		[Parameter(Mandatory=$False,ParameterSetName="Session")]
-        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+		[Parameter(Mandatory=$True,ParameterSetName="Session")]
+        [Parameter(Mandatory=$True,ParameterSetName="CredentialUri")]
+		[Parameter(Mandatory=$True,ParameterSetName="CredentiaNolUri")]
 		[Alias('_ref','ref')]
         [string]
         $Reference =  $Script:IBConfig.Uri,
 
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
-        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+        [Parameter(Mandatory=$True,ParameterSetName="CredentialUri")]
         [string]
         $Uri =  $Script:IBConfig.Uri,
         
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
-        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+        [Parameter(Mandatory=$True,ParameterSetName="CredentialNoUri")]
         [string]
         $IBVersion = $Script:IBConfig.IBVersion,
+
+		[Parameter(Mandatory=$True,ParameterSetName="CredentialNoUri")]
+        [string]
+        $IBServer,
         
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Microsoft.PowerShell.Commands.WebRequestSession]
         $IBSession = $Script:IBConfig.IBSession,
         
-        [Parameter(Mandatory=$True,ParameterSetName="Credential")]
+        [Parameter(Mandatory=$True,ParameterSetName="CredentialNoUri")]
+		[Parameter(Mandatory=$True,ParameterSetName="CredentialUri")]
         [System.Management.Automation.PSCredential]
         $Credential,
-        
-        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
-        [string]
-        $IBServer,
         
         [switch]
         $PassThru
@@ -68,7 +69,7 @@ Function Remove-InfoBloxResourceRecord {
     
     BEGIN {
 		if (-not($PSBoundParameters.ContainsKey("Uri")) ) {
-			if ( [string]::IsNullOrEmpty($Uri) -and $PSCmdlet.ParameterSetName -eq "Credential" ) {
+			if ( [string]::IsNullOrEmpty($Uri) -and $PSCmdlet.ParameterSetName -match "Credential" ) {
 				if ([string]::IsNullOrEmpty($IBServer) -or [string]::IsNullOrEmpty($IBVersion) ) {
 					throw "Unable to determine Uri for IBServer. Specify Uri, or IBVersion and IBServer."
 				}
@@ -85,7 +86,7 @@ Function Remove-InfoBloxResourceRecord {
 
         $ReqUri = "{0}/{1}" -f $Uri, $Reference
         
-		if ( $PSCmdlet.ParameterSetName -eq "Credential") {
+		if ( $PSCmdlet.ParameterSetName -match "Credential") {
 			$IRMParams = @{
 				Uri = $ReqUri
 				Method = 'Delete'
