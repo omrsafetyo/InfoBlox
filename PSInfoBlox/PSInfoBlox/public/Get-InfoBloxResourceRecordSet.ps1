@@ -49,6 +49,8 @@ Function Get-InfoBloxResourceRecordSet {
         https://github.com/AWahlqvist/Infoblox-PowerShell-Module/tree/master/cmdlets
         https://github.com/RamblingCookieMonster/Infoblox/blob/master/Infoblox/Get-IBRecord.ps1
         https://github.com/Infoblox-API/PowerShell/tree/master/examples
+
+		https://github.com/slchorne/apibrowser/blob/master/apiguide/README.md
     #>
     [CmdletBinding(DefaultParameterSetName="Session")]
     param(
@@ -59,6 +61,28 @@ Function Get-InfoBloxResourceRecordSet {
         $RecordType = "A",
         
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+		[Alias("MaxRecords","Records","Count","RecordCount")]
+        [int]
+        $PageSize = 1000,
+        
+        [Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+        [string]
+        $SearchField = 'name',
+        
+        [Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+		[Alias("eq", "ceq", "neq", "like", "ge", "le")] # -eq, -ne, -gt, -lt, -le, -ge		# = ~= := <= >=  clike ?
+		[string]
+        $SearchValue = '',
+        
+        [Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+        [string]
+        $Properties = '',
+
+		[Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
         $Uri =  $Script:IBConfig.Uri,
@@ -79,26 +103,6 @@ Function Get-InfoBloxResourceRecordSet {
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
         $IBServer,
-        
-        [Parameter(Mandatory=$False,ParameterSetName="Session")]
-        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
-        [int]
-        $PageSize = 1000,
-        
-        [Parameter(Mandatory=$False,ParameterSetName="Session")]
-        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
-        [string]
-        $SearchField = 'name',
-        
-        [Parameter(Mandatory=$False,ParameterSetName="Session")]
-        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
-        [string]
-        $SearchValue = '',
-        
-        [Parameter(Mandatory=$False,ParameterSetName="Session")]
-        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
-        [string]
-        $Properties = '',
         
         [switch]
         $PassThru
@@ -126,7 +130,8 @@ Function Get-InfoBloxResourceRecordSet {
 			$Script:IBConfig = Get-InfoBloxConfig
 			$Uri = $Script:IBConfig.Uri
         }
-        
+		
+		# "eq", "ceq", "like", "clike", "ge", "le"
         $exactQualityArr = @("text","creator","reclaimable","port")                # =
         $regexArr = @("zone","view","target")                                    # ~=, =
         $caseInsensitiveArr = @("name","ddns_principal","comment")                # := , ~=, =
@@ -134,6 +139,17 @@ Function Get-InfoBloxResourceRecordSet {
         $notSearchableArr = @("use_ttl","ttl","forbid_reclamation","dns_name","disable","ddns_protected","creation_time","cloud_info","aws_rte53_record_info")
         # creation_time = epochseconds format
         # extattrs    
+
+		$CommandLine = $MyInvocation.Line
+		if ( $PSBoundParameters.ContainsKey("SearchValue") ) {
+			Write-Verbose "Checking to see if equality operator alias used"
+			if ( -not($CommandLine -match " -SearchValue ") ) {
+				Write-Verbose "Equality operator alias used."
+				# The Actual variable name was not used, which alias was?
+				$SearchValueAliasUsed = $CommandLine -match "\s-($($MyInvocation.MyCommand.Parameters['SearchValue'].Aliases -join '|'))\s" | % { $Matches[1] }
+				Write-Verbose "Alias used is $SearchValueAliasUsed"
+			}
+		}
     }
     
     PROCESS {
@@ -153,15 +169,44 @@ Function Get-InfoBloxResourceRecordSet {
         
         # TODO: Refine this so it works a bit better. This shouldn't be a 1:many ratio - it should be many:many. Need to parameterize the options.
         if ( $PSBoundParameters.ContainsKey("SearchValue") ) {
-            switch ( $SearchField) {
-                {$exactQualityArr -contains $_} {$ReqUri = "{0}&{1}={2}" -f $ReqUri, $SearchField, $SearchValue}
-                {$regexArr -contains $_} {$ReqUri = "{0}&{1}~={2}" -f $ReqUri, $SearchField, $SearchValue}
-                {$caseInsensitiveArr -contains $_} {$ReqUri = "{0}&{1}:={2}" -f $ReqUri, $SearchField, $SearchValue}
-            }
+			# 6/2/2017
+			if ( $SearchValueAliasUsed ) {
+				Write-Verbose "Using equality operator"
+				switch ( $SearchValueAliasUsed ) {
+					"eq" {
+						$EqualityOperator = ":="
+					}
+					"ceq" {
+						$EqualityOperator = "="
+					}
+					"neq" {
+						$EqualityOperator = "!="
+					}
+					"like" {
+						$EqualityOperator = "~="
+					}
+					"ge" {
+						$EqualityOperator = ">="
+					}
+					"le" {
+						$EqualityOperator = "<="
+					}
+				}
+				Write-Verbose "Using $EqualityOperator"
+				$ReqUri = "{0}&{1}{2}{3}" -f $ReqUri, $SearchField, $EqualityOperator, $SearchValue
+			}
+			else {
+				Write-Verbose "Not using specific equality operator"
+				switch ( $SearchField ) {
+					{$exactQualityArr -contains $_} {$ReqUri = "{0}&{1}={2}" -f $ReqUri, $SearchField, $SearchValue}
+					{$regexArr -contains $_} {$ReqUri = "{0}&{1}~={2}" -f $ReqUri, $SearchField, $SearchValue}
+					{$caseInsensitiveArr -contains $_} {$ReqUri = "{0}&{1}:={2}" -f $ReqUri, $SearchField, $SearchValue}
+				}
+			}
         }
         
         if ( $PSBoundParameters.ContainsKey("Properties") ) {
-            $ReqUri = "{0}&return_fileds={1}" -f $ReqUri, $Properties.Join(",").Replace(" ","").ToLower()
+            $ReqUri = "{0}&return_fields={1}" -f $ReqUri, $Properties.Join(",").Replace(" ","").ToLower()
         }
         
         
