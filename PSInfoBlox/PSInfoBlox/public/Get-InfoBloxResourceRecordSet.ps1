@@ -146,7 +146,11 @@ Function Get-InfoBloxResourceRecordSet {
 			if ( -not($CommandLine -match " -SearchValue ") ) {
 				Write-Verbose "Equality operator alias used."
 				# The Actual variable name was not used, which alias was?
-				$SearchValueAliasUsed = $CommandLine -match "\s-($($MyInvocation.MyCommand.Parameters['SearchValue'].Aliases -join '|'))\s" | % { $Matches[1] }
+				# $SearchValueAliasUsed = $CommandLine -match "\s-($($MyInvocation.MyCommand.Parameters['SearchValue'].Aliases -join '|'))\s" | % { $Matches[1] }
+				$Aliases = $MyInvocation.MyCommand.Parameters['SearchValue'].Aliases -join '|'
+				$Quotes = "'" + '"'
+				$Regex = '\s-({0})[\s:]+?[{2}]??{1}[{2}]??' -f $Aliases, $SearchValue, $Quotes
+				$SearchValueAliasUsed = $CommandLine -match $Regex | ForEach-Object { $Matches[1] }
 				Write-Verbose "Alias used is $SearchValueAliasUsed"
 			}
 		}
