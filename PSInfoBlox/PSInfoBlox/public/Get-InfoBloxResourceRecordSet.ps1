@@ -62,7 +62,7 @@ Function Get-InfoBloxResourceRecordSet {
         
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
-		[Alias("MaxRecords","Records","Count","RecordCount")]
+		[Alias("MaxRecords","Records","Count","RecordCount","MaxResults")]
         [int]
         $PageSize = 1000,
         
@@ -73,8 +73,8 @@ Function Get-InfoBloxResourceRecordSet {
         
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
-		[Alias("eq", "ceq", "neq", "like", "ge", "le")] # -eq, -ne, -gt, -lt, -le, -ge		# = ~= := <= >=  clike ?
-		[string]
+        [Alias("eq", "ceq", "neq", "like", "ge", "le")] # -eq, -ne, -gt, -lt, -le, -ge		# = ~= := <= >=  clike ?
+        [string]
         $SearchValue = '',
         
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
@@ -82,7 +82,7 @@ Function Get-InfoBloxResourceRecordSet {
         [string]
         $Properties = '',
 
-		[Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
         $Uri =  $Script:IBConfig.Uri,
@@ -157,9 +157,9 @@ Function Get-InfoBloxResourceRecordSet {
     }
     
     PROCESS {
-		$msg = "ParameterSetName is {0}" -f $PSCmdlet.ParameterSetName
-		Write-Host $msg
-		Write-Host "Uri is $Uri"
+        $msg = "ParameterSetName is {0}" -f $PSCmdlet.ParameterSetName
+        Write-Verbose $msg
+        Write-Verbose "Uri is $Uri"
         $BaseUri = "{0}/record:{1}" -f $Uri, $RecordType.ToLower()
         $NextPageID = "NotStarted"
         
