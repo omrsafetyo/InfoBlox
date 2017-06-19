@@ -49,7 +49,7 @@ Function New-InfoBloxResourceRecord {
         #[ValidateSet("A","AAAA","CName","DName","DNSKEY","DS","Host","LBDN","MX","NAPTR","NS","NSEC","NSEC3","NSEC3PARAM","PTR","RRSIG","SRV","TXT")]
         [ValidateSet("A","AAAA","CName","Host","Host_ipv4addr","Host_ipv6addr","LBDN","MX","NAPTR","PTR","SRV","TXT")]
         [string]
-        $RecordType = "A",
+        $RecordType = "Host",
         
         [Parameter(Mandatory=$False,ParameterSetName="IBSession")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
@@ -78,6 +78,8 @@ Function New-InfoBloxResourceRecord {
     )
     
     DynamicParam {
+		# https://github.com/RamblingCookieMonster/PowerShell/blob/master/New-DynamicParam.ps1 
+
         # this array holds a list of the parameter names that are added to the parm block. This is they can 
         # be looped through when creating the JSON object for the body
         $DynamicParamList = New-Object System.Collections.ArrayList
@@ -177,24 +179,44 @@ Function New-InfoBloxResourceRecord {
                 $paramDictionary.Add('Name', $HostNameParam)
                 [void]$DynamicParamList.Add("Name")
                 
-                <# 
-                # TODO:
+                
+                # TODO:  Move the declaration of NextAvailableIP up with the rest of the decalarations
                 $NextAvailableIp = New-Object System.Management.Automation.ParameterAttribute
                 $NextAvailableIp.Mandatory = $false
                 $NextAvailableIp.HelpMessage = "Determines if the ipv4Address should be the next available address in the network"
+				$NextAvailableIpAliases = New-Object System.Management.Automation.AliasAttribute -ArgumentList @("NextAvailable", "UseNextAvailable", "NextIP", "NextIPAddress")
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $attributeCollection.Add($NextAvailableIp)
+				$attributeCollection.Add($NextAvailableIpAliases)
                 $NextAvailableIpParam = New-Object System.Management.Automation.RuntimeDefinedParameter('UseNextAvailableIp', [switch], $attributeCollection)
                 $paramDictionary.Add('UseNextAvailableIp', $NextAvailableIpParam)
-                
+				[void]$DynamicParamList.Add("UseNextAvailableIp")
+
+                <# 
                     # Examples:
                     # func:nextavailableip:network/ZG54dfgsrDFEFfsfsLzA:10.0.0.0/8/default
                     # func:nextavailableip:10.0.0.0/8
                     # func:nextavailableip:10.0.0.0/8,external
                     # func:nextavailableip:10.0.0.3-10.0.0.10
-                    
-                    
+
+					    { "name":"wapi.test.org",
+						  "ipv4addrs":[
+							  {
+								 "ipv4addr":"func:nextavailableip:10.1.1.0/24"
+							  }
+							]
+						}
                 #>
+
+				# TODO:  Move the declaration of Network up with the rest of the decalarations
+                $Network = New-Object System.Management.Automation.ParameterAttribute
+                $Network.Mandatory = $false
+                $Network.HelpMessage = "Determines if the ipv4Address should be the next available address in the network"
+                $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+                $attributeCollection.Add($Network)
+                $NetworkParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Network', [string], $attributeCollection)
+                $paramDictionary.Add('Network', $NetworkParam)
+				[void]$DynamicParamList.Add("Network")
             }
             "AAAA"        {
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
@@ -260,6 +282,28 @@ Function New-InfoBloxResourceRecord {
                 $HostNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Name', [string], $attributeCollection)
                 $paramDictionary.Add('Name', $HostNameParam)
                 [void]$DynamicParamList.Add("Name")
+
+				 # TODO:  Move the declaration of NextAvailableIP up with the rest of the decalarations
+                $NextAvailableIp = New-Object System.Management.Automation.ParameterAttribute
+                $NextAvailableIp.Mandatory = $false
+                $NextAvailableIp.HelpMessage = "Determines if the ipv4Address should be the next available address in the network"
+				$NextAvailableIpAliases = New-Object System.Management.Automation.AliasAttribute -ArgumentList @("NextAvailable", "UseNextAvailable", "NextIP", "NextIPAddress")
+                $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+                $attributeCollection.Add($NextAvailableIp)
+				$attributeCollection.Add($NextAvailableIpAliases)
+                $NextAvailableIpParam = New-Object System.Management.Automation.RuntimeDefinedParameter('UseNextAvailableIp', [switch], $attributeCollection)
+                $paramDictionary.Add('UseNextAvailableIp', $NextAvailableIpParam)
+				[void]$DynamicParamList.Add("UseNextAvailableIp")
+
+ 				# TODO:  Move the declaration of Network up with the rest of the decalarations
+                $Network = New-Object System.Management.Automation.ParameterAttribute
+                $Network.Mandatory = $false
+                $Network.HelpMessage = "Determines if the ipv4Address should be the next available address in the network"
+                $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+                $attributeCollection.Add($Network)
+                $NetworkParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Network', [string], $attributeCollection)
+                $paramDictionary.Add('Network', $NetworkParam)
+				[void]$DynamicParamList.Add("Network")
             }
             "Host_ipv4addr"        {
                 #    A Host address in an object used to specify addresses in the record.host object
@@ -477,6 +521,20 @@ Function New-InfoBloxResourceRecord {
     PROCESS {
         # build Url based on the record type
         $ReqUri = "{0}/record:{1}?_return_fields%2b=name,zone,extattrs" -f $Uri, $RecordType.ToLower()    # %2b in place of +
+
+		#IPv4Addr - assign this value to either the passed in value for ipv4addr (else) or, if the UseNextAvailableIp switch was used, set it to the next
+		# available IPv4Address in the specified network
+		if ( $PSBoundParameters.ContainsKey("UseNextAvailableIp") ) {
+			# If UseNextAvailableIp switch was specified, we also need the network
+			if (-NOT($PSBoundParameters.ContainsKey("Network"))) {
+				throw "UseNextAvailableIp switch was specified, but no network was specified."
+				return
+			}
+			$IPAddressString = "func:nextavailableip:{0}" -f $PSBoundParameters["Network"]
+		}
+		elseIf ($RecordType -eq $Host -and $PSBoundParameters.ContainsKey("ipv4addr")) {
+			$IPAddressString = $ipv4addr
+		}
         
         # We need to build the JSON Body from the Dynamic Parameters
         $ParamHash = @{}
@@ -486,9 +544,19 @@ Function New-InfoBloxResourceRecord {
 				if ( $arrays -contains $DynamicParam -and $RecordType -eq "Host" ) {
 					$Parent = "{0}s" -f $DynamicParam.ToLower()
 					$SubHash = @{
-						$DynamicParam.ToLower() = $PSBoundParameters[$DynamicParam]
+						$DynamicParam.ToLower() = $Value
 					}
 					$ParamHash.Add($Parent,[array]$SubHash)  # cast subhash as array, so it has the proper format.
+				}
+				elseif ($DynamicParam -eq "UseNextAvailableIp") {
+					$Parent = "ipv4addrs"
+					$SubHash = @{
+						ipv4addr = $IPAddressString
+					}
+					$ParamHash.Add($Parent,[array]$SubHash)  # cast subhash as array, so it has the proper format.
+				}
+				elseif ($DynamicParam -eq "Network") {
+					continue
 				}
 				else {
 					$ParamHash.Add($DynamicParam.ToLower(),$PSBoundParameters[$DynamicParam])
@@ -525,7 +593,7 @@ Function New-InfoBloxResourceRecord {
             $TempResult = Invoke-RestMethod @IRMParams
         }
         catch {
-            Throw "Error retrieving record: $_"
+            Throw "Error inserting record: $_"
         }
         
 

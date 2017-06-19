@@ -213,7 +213,6 @@ Function Get-InfoBloxResourceRecordSet {
             $ReqUri = "{0}&return_fields={1}" -f $ReqUri, $Properties.Join(",").Replace(" ","").ToLower()
         }
         
-        
         $IRMParams = @{
             Uri = $ReqUri
             Method = 'Get'
