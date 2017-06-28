@@ -112,6 +112,9 @@ Function Get-InfoBloxNetwork {
 		elseif ($PSBoundParameters.ContainsKey("Reference")) {
 			$ReqUri = $Uri, $Reference -join "/"
 		}
+		else {
+			$ReqUri = $BaseUri
+		}
         
 		if ( $PSCmdlet.ParameterSetName -eq "Session") {
 			$IRMParams = @{
