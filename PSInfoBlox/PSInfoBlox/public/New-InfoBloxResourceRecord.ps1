@@ -530,15 +530,20 @@ Function New-InfoBloxResourceRecord {
 				throw "UseNextAvailableIp switch was specified, but no network was specified."
 				return
 			}
+			Write-Verbose "Using next available IP"
 			$IPAddressString = "func:nextavailableip:{0}" -f $PSBoundParameters["Network"]
 		}
-		elseIf ($RecordType -eq $Host -and $PSBoundParameters.ContainsKey("ipv4addr")) {
-			$IPAddressString = $ipv4addr
+		elseIf ($RecordType -eq "Host" -and $PSBoundParameters.ContainsKey("ipv4addr")) {
+			Write-Verbose "Using passed ipv4addr"
+			Write-Verbose $PSBoundParameters["ipv4addr"]
+			$IPAddressString = $PSBoundParameters["ipv4addr"]
 		}
+		Write-Verbose "ipv4addr is $IPAddressString"
         
         # We need to build the JSON Body from the Dynamic Parameters
         $ParamHash = @{}
         ForEach ( $DynamicParam in $DynamicParamList ) {
+			$Value = $PSBoundParameters[$DynamicParam]
             if ( $PSBoundParameters.ContainsKey($DynamicParam) ) {
                 # if Host, ip4addr = ipv4addrs array, etc.
 				if ( $arrays -contains $DynamicParam -and $RecordType -eq "Host" ) {
