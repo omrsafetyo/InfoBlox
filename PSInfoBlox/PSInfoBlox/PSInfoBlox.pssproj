@@ -36,6 +36,7 @@
   <ItemGroup>
     <Compile Include="public\Get-InfoBloxConfig.ps1" />
     <Compile Include="public\Get-InfoBloxNetwork.ps1" />
+    <Compile Include="public\Get-InfoBloxRange.ps1" />
     <Compile Include="public\Get-InfoBloxResourceRecordSet.ps1" />
     <Compile Include="PSInfoBlox.psd1" />
     <Compile Include="PSInfoBlox.psm1" />

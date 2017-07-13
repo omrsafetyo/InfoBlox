@@ -211,12 +211,21 @@ Function New-InfoBloxResourceRecord {
 				# TODO:  Move the declaration of Network up with the rest of the decalarations
                 $Network = New-Object System.Management.Automation.ParameterAttribute
                 $Network.Mandatory = $false
-                $Network.HelpMessage = "Determines if the ipv4Address should be the next available address in the network"
+                $Network.HelpMessage = "Determines the network for the next available address"
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $attributeCollection.Add($Network)
                 $NetworkParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Network', [string], $attributeCollection)
                 $paramDictionary.Add('Network', $NetworkParam)
 				[void]$DynamicParamList.Add("Network")
+
+				$Range = New-Object System.Management.Automation.ParameterAttribute
+                $Range.Mandatory = $false
+                $Range.HelpMessage = "Determines the range for the next available address"
+                $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+                $attributeCollection.Add($Range)
+                $RangeParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Range', [string], $attributeCollection)
+                $paramDictionary.Add('Range', $RangeParam)
+				[void]$DynamicParamList.Add("Range")
             }
             "AAAA"        {
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
@@ -298,12 +307,21 @@ Function New-InfoBloxResourceRecord {
  				# TODO:  Move the declaration of Network up with the rest of the decalarations
                 $Network = New-Object System.Management.Automation.ParameterAttribute
                 $Network.Mandatory = $false
-                $Network.HelpMessage = "Determines if the ipv4Address should be the next available address in the network"
+                $Network.HelpMessage = "Specifies the network to insert the next available address into."
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $attributeCollection.Add($Network)
                 $NetworkParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Network', [string], $attributeCollection)
                 $paramDictionary.Add('Network', $NetworkParam)
 				[void]$DynamicParamList.Add("Network")
+
+				$Range = New-Object System.Management.Automation.ParameterAttribute
+                $Range.Mandatory = $false
+                $Range.HelpMessage = "Specifies the range to insert the next available address into."
+                $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+                $attributeCollection.Add($Range)
+                $RangeParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Range', [string], $attributeCollection)
+                $paramDictionary.Add('Range', $RangeParam)
+				[void]$DynamicParamList.Add("Range")
             }
             "Host_ipv4addr"        {
                 #    A Host address in an object used to specify addresses in the record.host object
@@ -525,13 +543,30 @@ Function New-InfoBloxResourceRecord {
 		#IPv4Addr - assign this value to either the passed in value for ipv4addr (else) or, if the UseNextAvailableIp switch was used, set it to the next
 		# available IPv4Address in the specified network
 		if ( $PSBoundParameters.ContainsKey("UseNextAvailableIp") ) {
-			# If UseNextAvailableIp switch was specified, we also need the network
-			if (-NOT($PSBoundParameters.ContainsKey("Network"))) {
-				throw "UseNextAvailableIp switch was specified, but no network was specified."
+			# If UseNextAvailableIp switch was specified, we also need the network or range
+			Write-Verbose "Using next available IP"
+			if ($PSBoundParameters.ContainsKey("Network")) {
+				$IPAddressString = "func:nextavailableip:{0}" -f $PSBoundParameters["Network"]
+			}
+			elseif ($PSBoundParameters.ContainsKey("Range")) {
+				try { 
+					[void][ipaddress]::Parse($PSBoundParameters["Range"])
+					# This is an IP Address.  Assume it is a start address of the range - lets try to find the range.
+					$RangeObj = Get-InfoBloxRange -StartAddress $PSBoundParameters["Range"]
+					if ( $null -eq $RangeObj ) {
+						throw "UseNextAvailableIp switch was specified, valid IP address was passed, but was not a valid range or network."
+						return
+					}
+					$IPAddressString = "func:nextavailableip:{0}-{1}" -f $RangeObj.start_addr, $RangeObj.end_addr
+				}
+				catch {
+					$IPAddressString = "func:nextavailableip:{0}" -f $PSBoundParameters["Range"]
+				}
+			}
+			else {
+				throw "UseNextAvailableIp switch was specified, but no network or range was specified."
 				return
 			}
-			Write-Verbose "Using next available IP"
-			$IPAddressString = "func:nextavailableip:{0}" -f $PSBoundParameters["Network"]
 		}
 		elseIf ($RecordType -eq "Host" -and $PSBoundParameters.ContainsKey("ipv4addr")) {
 			Write-Verbose "Using passed ipv4addr"
@@ -560,7 +595,7 @@ Function New-InfoBloxResourceRecord {
 					}
 					$ParamHash.Add($Parent,[array]$SubHash)  # cast subhash as array, so it has the proper format.
 				}
-				elseif ($DynamicParam -eq "Network") {
+				elseif (@("Network","Range") -contains $DynamicParam ) {
 					continue
 				}
 				else {
