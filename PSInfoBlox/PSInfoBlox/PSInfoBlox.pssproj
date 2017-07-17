@@ -28,12 +28,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="en-US\" />
+    <Folder Include="helpers\" />
     <Folder Include="Tests\" />
     <Folder Include="private\" />
     <Folder Include="public\" />
     <Folder Include="public\test\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="helpers\Compare-DNSZoneToInfoBlox.ps1" />
+    <Compile Include="helpers\TestConnectionAsync.psm1" />
+    <Compile Include="helpers\WMIDNSServer.psm1" />
     <Compile Include="public\Get-InfoBloxConfig.ps1" />
     <Compile Include="public\Get-InfoBloxNetwork.ps1" />
     <Compile Include="public\Get-InfoBloxRange.ps1" />

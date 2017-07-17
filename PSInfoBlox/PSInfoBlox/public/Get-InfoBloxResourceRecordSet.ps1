@@ -149,7 +149,7 @@ Function Get-InfoBloxResourceRecordSet {
 				# $SearchValueAliasUsed = $CommandLine -match "\s-($($MyInvocation.MyCommand.Parameters['SearchValue'].Aliases -join '|'))\s" | % { $Matches[1] }
 				$Aliases = $MyInvocation.MyCommand.Parameters['SearchValue'].Aliases -join '|'
 				$Quotes = "'" + '"'
-				$Regex = '\s-({0})[\s:]+?[{2}]??{1}[{2}]??' -f $Aliases, $SearchValue, $Quotes
+				$Regex = '\s-({0})[\s:]+?[{2}]??{1}[{2}]??' -f $Aliases, $PSBoundParameters["SearchValue"], $Quotes
 				$SearchValueAliasUsed = $CommandLine -match $Regex | ForEach-Object { $Matches[1] }
 				Write-Verbose "Alias used is $SearchValueAliasUsed"
 			}

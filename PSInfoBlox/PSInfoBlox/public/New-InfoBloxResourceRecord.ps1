@@ -557,9 +557,57 @@ Function New-InfoBloxResourceRecord {
 						throw "UseNextAvailableIp switch was specified, valid IP address was passed, but was not a valid range or network."
 						return
 					}
-					$IPAddressString = "func:nextavailableip:{0}-{1}" -f $RangeObj.start_addr, $RangeObj.end_addr
+					if ( $RangeObj.start_addr.Split(".")[3] -eq 0 ) {
+						<#
+						How to create a network in a specified RANGE, and skip/exclude a specified IP address - in the even the next available IP
+						Has a last octet of 0, we do want to skip that address, unless this is a /31.
+						{
+						"name":  "myrecord.mydomain.com",
+						"ipv4addrs":  [
+										  {
+											  "ipv4addr":  {
+												"_object_function" : "next_available_ip",
+												"_object_field" : "ips",
+												"_object" : "range",
+												"_result_field": "ips", 
+												"_parameters" : {
+													"num" : 1,
+													"exclude" : ["192.168.1.0"]
+												},
+												"_object_parameters" : {
+													"start_addr" : "192.168.1.0"
+												}
+											  }
+										  }
+									  ]
+						}
+						#>
+
+						$IPAddressString = @{
+							 "_object_function" = "next_available_ip"
+                            "_object_field" = "ips"
+                            "_object" = "range"
+                            "_result_field" = "ips"
+						}
+						# Embdedded hashtable _parameters
+						$_parameters = @{
+							num = 1
+							exclude = [array]$RangeObj.start_addr
+						}
+						# Embdedded hashtable _object_parameters
+						$_object_parameters = @{
+							start_addr = $RangeObj.start_addr
+						}
+						#Add the embedded hashtables to the parent
+						$IPAddressString.Add("_parameters",$_parameters)
+						$IPAddressString.Add("_object_parameters",$_object_parameters)
+					}
+					else {
+						$IPAddressString = "func:nextavailableip:{0}-{1}" -f $RangeObj.start_addr, $RangeObj.end_addr
+					}
 				}
 				catch {
+					# not an IP Address
 					$IPAddressString = "func:nextavailableip:{0}" -f $PSBoundParameters["Range"]
 				}
 			}
@@ -604,7 +652,7 @@ Function New-InfoBloxResourceRecord {
             }
         }
         
-        $JSON = $ParamHash | ConvertTo-Json
+        $JSON = $ParamHash | ConvertTo-Json -Depth 5
         if ($PSCmdlet.ParameterSetName -eq "Credential" ) {
 			$IRMParams = @{
 				Uri = $ReqUri
