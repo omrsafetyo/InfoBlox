@@ -44,8 +44,8 @@ Function Set-InfoBloxResourceRecord {
         <#
             
         #>
-        [Parameter(Mandatory=$False,ParameterSetName="IBSession")]
-        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+        [Parameter(Mandatory=$True,ParameterSetName="IBSession")]
+        [Parameter(Mandatory=$True,ParameterSetName="Credential")]
         [Alias('_ref','ref')]
         [string]
         $Reference,
@@ -487,7 +487,7 @@ Function Set-InfoBloxResourceRecord {
     
     PROCESS {
         # build Url based on the record type
-        $ReqUri = "{0}/record:{1}?_return_fields%2b=name,zone,extattrs" -f $Uri, $RecordType.ToLower()    # %2b in place of +
+        $ReqUri = "{0}/{1}" -f $Uri, $Reference
         
         # We need to build the JSON Body from the Dynamic Parameters
         $ParamHash = @{}
@@ -520,7 +520,7 @@ Function Set-InfoBloxResourceRecord {
 		else {
 			$IRMParams = @{
 				Uri = $ReqUri
-				Method = 'Post'
+				Method = 'Put'
 				WebSession = $IBSession
 				Body = $JSON
 				ContentType = "application/json"

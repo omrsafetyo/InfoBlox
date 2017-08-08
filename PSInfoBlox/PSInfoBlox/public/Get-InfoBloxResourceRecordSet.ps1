@@ -141,6 +141,17 @@ Function Get-InfoBloxResourceRecordSet {
         # extattrs    
 
 		$CommandLine = $MyInvocation.Line
+		# This accounts for when variables are passed to the -SearchValue parameter when an Alias is used.
+		$varPattern = '\$\w+'	# variable regex pattern
+		filter Matches($pattern) {	# find all instances
+			$_ | Select-String -AllMatches $pattern |
+			Select-Object -ExpandProperty Matches |
+			Select-Object -ExpandProperty Value
+		}
+		# when we re-use them in the regex below, we need to look for \$varname
+		# so this will look for -like "zonename" or -like $ZoneName
+		$VariablesInCommandLine = $CommandLine | Matches $varPattern | ForEach-Object { $_ -replace '\$','\$'}
+
 		if ( $PSBoundParameters.ContainsKey("SearchValue") ) {
 			Write-Verbose "Checking to see if equality operator alias used"
 			if ( -not($CommandLine -match " -SearchValue ") ) {
@@ -149,7 +160,7 @@ Function Get-InfoBloxResourceRecordSet {
 				# $SearchValueAliasUsed = $CommandLine -match "\s-($($MyInvocation.MyCommand.Parameters['SearchValue'].Aliases -join '|'))\s" | % { $Matches[1] }
 				$Aliases = $MyInvocation.MyCommand.Parameters['SearchValue'].Aliases -join '|'
 				$Quotes = "'" + '"'
-				$Regex = '\s-({0})[\s:]+?[{2}]??{1}[{2}]??' -f $Aliases, $PSBoundParameters["SearchValue"], $Quotes
+				$Regex = '\s-({0})[\s:]+?[{3}]??({1}|{2})[{3}]??' -f $Aliases, $PSBoundParameters["SearchValue"], ($VariablesInCommandLine -join '|'), $Quotes
 				$SearchValueAliasUsed = $CommandLine -match $Regex | ForEach-Object { $Matches[1] }
 				Write-Verbose "Alias used is $SearchValueAliasUsed"
 			}
