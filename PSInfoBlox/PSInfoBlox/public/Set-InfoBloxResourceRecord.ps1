@@ -108,7 +108,7 @@ Function Set-InfoBloxResourceRecord {
 				# if a string was passed, just split the string.
 				$RecordType = $Reference.Split(":/")[1]
 			}
-			Write-Host "Record type os $RecordType"
+			Write-Host "Record type is $RecordType"
 		}
 		else {
 			Write-Host "Record type not found"
@@ -190,6 +190,14 @@ Function Set-InfoBloxResourceRecord {
         $Disable = New-Object System.Management.Automation.ParameterAttribute
         $Disable.Mandatory = $false
         $Disable.HelpMessage = "For nonterminal NAPTR records, this field specifies the next domain name to look up."
+
+		$Remove = New-Object System.Management.Automation.ParameterAttribute
+        $Remove.Mandatory = $false
+        $Remove.HelpMessage = "For ipv4addr, this will remove the specified IP Address from the list"
+
+		$Add = New-Object System.Management.Automation.ParameterAttribute
+        $Add.Mandatory = $false
+        $Add.HelpMessage = "For ipv4addr, this will remove the specified IP Address from the list"
         
         #endregion parameter attribute definitions
         
@@ -292,6 +300,18 @@ Function Set-InfoBloxResourceRecord {
                 $HostNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Name', [string], $attributeCollection)
                 $paramDictionary.Add('Name', $HostNameParam)
                 [void]$DynamicParamList.Add("Name")
+
+				$attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+                $attributeCollection.Add($Remove)
+                $RemoveParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Remove', [switch], $attributeCollection)
+                $paramDictionary.Add('Remove', $RemoveParam)
+                [void]$DynamicParamList.Add("Remove")
+
+				$attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+                $attributeCollection.Add($Add)
+                $AddParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Add', [switch], $attributeCollection)
+                $paramDictionary.Add('Add', $AddParam)
+                [void]$DynamicParamList.Add("Add")
             }
             "Host_ipv4addr"        {
                 #    A Host address in an object used to specify addresses in the record.host object
@@ -483,6 +503,7 @@ Function Set-InfoBloxResourceRecord {
 		}
 		Set-TrustAllCertsPolicy
 		$arrays = @("ipv4addr","ipv6addr","aliases")
+		$skips =  @("Remove","Add")
     }
     
     PROCESS {
@@ -494,12 +515,31 @@ Function Set-InfoBloxResourceRecord {
         ForEach ( $DynamicParam in $DynamicParamList ) {
             if ( $PSBoundParameters.ContainsKey($DynamicParam) ) {
                 # if Host, ip4addr = ipv4addrs array, etc.
+				<#
+					# trying to allow an array for ip4vaddrs. Will need to switch this parameter to type [string[]] when we try this.
+					$Parent = "{0}s" -f $DynamicParam.ToLower()
+					ForEach ($item in $PSBoundParameters[$DynamicParam]) {
+						$SubHash = @{$DynamicParam = $item}
+						$ParamHash.Add($Parent,[array]$SubHash)  # cast subhash as array, so it has the proper format.
+						# $SubHash.Add($DynamicParam.ToLower(),$item)
+					}
+				#>
 				if ( $arrays -contains $DynamicParam -and $RecordType -eq "Host" ) {
 					$Parent = "{0}s" -f $DynamicParam.ToLower()
+
+					if ( $PSBoundParameters["Remove"] -eq $True ) {
+						$Parent = "{0}-" -f $Parent
+					}
+					if ( $PSBoundParameters["Add"] -eq $True ) {
+						$Parent = "{0}+" -f $Parent
+					}
 					$SubHash = @{
 						$DynamicParam.ToLower() = $PSBoundParameters[$DynamicParam]
 					}
 					$ParamHash.Add($Parent,[array]$SubHash)  # cast subhash as array, so it has the proper format.
+				}
+				elseif ($skips -contains $DynamicParam ) {
+					continue
 				}
 				else {
 					$ParamHash.Add($DynamicParam.ToLower(),$PSBoundParameters[$DynamicParam])

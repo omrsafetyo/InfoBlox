@@ -46,6 +46,7 @@
     <Compile Include="PSInfoBlox.psm1" />
     <Compile Include="public\Remove-InfoBloxResourceRecord.ps1" />
     <Compile Include="public\Set-InfoBloxConfig.ps1" />
+    <Compile Include="public\Test-IsIPAddress.ps1" />
     <Compile Include="Tests\PSInfoBlox.tests.ps1" />
     <Compile Include="public\New-InfoBloxResourceRecord.ps1" />
     <Compile Include="public\New-InfoBloxSession.ps1" />
