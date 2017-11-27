@@ -79,8 +79,8 @@ Function Get-InfoBloxResourceRecordSet {
         
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
-        [string]
-        $Properties = '',
+        [string[]]
+        $Properties,
 
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
@@ -109,6 +109,7 @@ Function Get-InfoBloxResourceRecordSet {
     )
     
     BEGIN {
+		Set-TrustAllCertsPolicy
         # If Credential was specified, we can use that to initiate the InfoBlox session. 
         # build a params hashtable to splat to the New-InfoBloxSession function
         if ( $PSCmdlet.ParameterSetName -eq "Credential" ) {
@@ -221,7 +222,7 @@ Function Get-InfoBloxResourceRecordSet {
         }
         
         if ( $PSBoundParameters.ContainsKey("Properties") ) {
-            $ReqUri = "{0}&return_fields={1}" -f $ReqUri, $Properties.Join(",").Replace(" ","").ToLower()
+            $ReqUri = "{0}&_return_fields={1}" -f $ReqUri, ($Properties -Join ",").Replace(" ","").ToLower()
         }
         
         $IRMParams = @{

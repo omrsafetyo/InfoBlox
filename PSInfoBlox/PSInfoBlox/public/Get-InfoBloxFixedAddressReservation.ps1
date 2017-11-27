@@ -1,4 +1,4 @@
-Function Get-InfoBloxNetwork {
+Function Get-InfoBloxFixedAddressReservation {
     <#
         .SYNOPSIS
         Retrieves Network records from the InfoBlox server.
@@ -56,8 +56,25 @@ Function Get-InfoBloxNetwork {
 
 		[Parameter(Mandatory=$False,ParameterSetName="Session")]
 		[Parameter(Mandatory=$False,ParameterSetName="Credential")]
+		[Alias('IPAddress','IP','ipv4Address')]
+        [string]
+        $ipv4addr,
+
+		[Parameter(Mandatory=$False,ParameterSetName="Session")]
+		[Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
         $Reference,
+
+		[Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+		[Alias("MaxRecords","Records","Count","RecordCount","MaxResults")]
+        [int]
+        $PageSize = 1000,
+
+		[Parameter(Mandatory=$False,ParameterSetName="Session")]
+        [Parameter(Mandatory=$False,ParameterSetName="Credential")]
+        [string[]]
+        $Properties,
 
         [Parameter(Mandatory=$False,ParameterSetName="Session")]
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
@@ -80,41 +97,41 @@ Function Get-InfoBloxNetwork {
         [Parameter(Mandatory=$False,ParameterSetName="Credential")]
         [string]
         $IBServer,
-
-		[Parameter(Mandatory=$False,ParameterSetName="Session")]
-		[Parameter(Mandatory=$False,ParameterSetName="Credential")]
-		[int]
-		$Next,
-
-		[switch]
-        $GetNextIPAddress,
-
-		[switch]
-        $IncludeUsedAddresses,
-        
+       
         [switch]
         $PassThru
     )
     
     BEGIN {
-        Set-TrustAllCertsPolicy
+		Set-TrustAllCertsPolicy
     }
     
     PROCESS {
         $msg = "ParameterSetName is {0}" -f $PSCmdlet.ParameterSetName
         Write-Verbose $msg
         Write-Verbose "Uri is $Uri"
-        $BaseUri = "{0}/network" -f $Uri
-        
+        $ReqUri = "{0}/fixedaddress" -f $Uri
+		$NextPageID = "NotStarted"
+
 		if ( $PSBoundParameters.ContainsKey("Network") ) {
-			$ReqUri = "{0}?network={1}" -f $BaseUri, $Network
+			$ReqUri = "{0}?network={1}" -f $ReqUri, $Network
+			$ReqUri = $ReqUri, "_paging=1&_max_results=$PageSize&_return_as_object=1" -join "&"
 		}
-		elseif ($PSBoundParameters.ContainsKey("Reference")) {
+
+		if ( $PSBoundParameters.ContainsKey("ipv4addr") ) {
+			$ReqUri = "{0}?ipv4addr={1}" -f $ReqUri, $ipv4addr
+			$ReqUri = $ReqUri, "_paging=1&_max_results=$PageSize&_return_as_object=1" -join "&"
+		}
+
+		if ($PSBoundParameters.ContainsKey("Reference")) {
 			$ReqUri = $Uri, $Reference -join "/"
+			$ReqUri = $ReqUri, "_return_as_object=1" -join "?"
 		}
-		else {
-			$ReqUri = $BaseUri
-		}
+
+
+		if ( $PSBoundParameters.ContainsKey("Properties") ) {
+            $ReqUri = "{0}&_return_fields={1}" -f $ReqUri, ($Properties -Join ",").Replace(" ","").ToLower()
+        }
         
 		if ( $PSCmdlet.ParameterSetName -eq "Session") {
 			$IRMParams = @{
@@ -131,53 +148,47 @@ Function Get-InfoBloxNetwork {
 			}
 		}
         
+		if ( $ReqUri -notmatch '\?') {
+			$ReqUri = $ReqUri, "_paging=1&_max_results=$PageSize&_return_as_object=1" -join "?"
+		}
+	
         Write-Verbose $ReqUri
 
-		try {
-            $TempResult = Invoke-RestMethod @IRMParams
-        }
-        catch {
-            Throw "Error retrieving record: $_"
-        }
+		do {
+            if($NextPageID -ne "NotStarted") {
+				Write-Verbose "Page --$NextPageID--"
+				$IRMParams.Uri = $IRMParams.Uri, "_page_id=$NextPageID" -join "&"
+            }
 
+            try {
+                $TempResult = Invoke-RestMethod @IRMParams
+            }
+            catch {
+                Throw "Error retrieving record: $_"
+            }
 
-		if ( $PSBoundParameters.ContainsKey("Next") ) {
-			$GetNextIPAddress = $True
-		}
-
-		if ( $GetNextIPAddress ) {
-			$ReqUri = "{0}/{1}" -f $Uri, $TempResult._ref
-			$ReqUri = $ReqUri, "_function=next_available_ip" -join "?"
-			$IRMParams["Uri"] = $ReqUri
-			$IRMParams["Method"] = "POST"
-			if ( $PSBoundParameters.ContainsKey("Next") ) {
-				$Num = @{
-					num = $Next
-				}
-				$Body = ConvertTo-Json -InputObject $Num
-				[void]$IRMParams.Add("Body",$Body)
-				[void]$IRMParams.Add('ContentType',"application/json")
+			if ( @($TempResult.psobject.properties | select-object -expandProperty Name) -contains "next_page_id" ) {
+				$NextPageID = $TempResult.next_page_id
 			}
-			
-			$NextIPResult = Invoke-RestMethod @IRMParams
-			$TempResult | Add-Member -Type NoteProperty -Name NextIPAddresses -Value $NextIPResult.ips
-			[void]$IRMParams.Remove("Body")
-			[void]$IRMParams.Remove("ContentType")
-		}
+			else {
+				$NextPageID = $null
+			}
+            
+            if ( $PassThru ) {
+                $TempResult | Add-Member -Type NoteProperty -Name IBSession -Value $IBSession
+				$TempResult
+            }
+            else {
+				if ( [string]::IsNullOrEmpty($NextPageId) ) {
+					$TempResult
+				}
+				else {
+					$TempResult.result
+				}
+            }
 
-		if ($IncludeUsedAddresses) {
-			$ReqUri = "{0}/ipv4address?network={1}" -f $Uri, $TempResult.Network
-			$IRMParams["Uri"] = $ReqUri
-			$IRMParams["Method"] = "GET"
-			$ipv4addressResult = Invoke-RestMethod @IRMParams
-			$TempResult | Add-Member -Type NoteProperty -Name CurrentRecords -Value $ipv4addressResult
-		}
-
-		if ( $PassThru ) {
-            $TempResult | Add-Member -Type NoteProperty -Name IBSession -Value $IBSession
         }
-
-        $TempResult
+        until ([string]::IsNullOrEmpty($NextPageID))
     }
     
     END {}

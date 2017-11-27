@@ -1,12 +1,12 @@
 #
 # Remove_InfoBloxResourceRecord.ps1
-Function Remove-InfoBloxResourceRecord {
+Function Remove-InfoBloxFixedAddressReservation {
     <#
         .SYNOPSIS
-        Deletes a resource record from the InfoBlox server.
+        Deletes a fixed address reservation from the InfoBlox server.
         
         .DESCRIPTION
-		Deletes a resource record from the InfoBlox server.
+		Deletes a fixed address reservation from the InfoBlox server.
         
         .PARAMETER Reference
         The reference Uri to the record.

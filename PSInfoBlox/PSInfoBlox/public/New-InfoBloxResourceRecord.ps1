@@ -91,75 +91,75 @@ Function New-InfoBloxResourceRecord {
         # the attribute collections, and param dictionaries in the individual case blocks.
         
         #region parameter attribute definitions
-        $HostName = New-Object System.Management.Automation.ParameterAttribute
-        $HostName.Mandatory = $true
-        $HostName.HelpMessage = "HostName of the record"
+        $pHostName = New-Object System.Management.Automation.ParameterAttribute
+        $pHostName.Mandatory = $true
+        $pHostName.HelpMessage = "HostName of the record"
         
-        $Canonical = New-Object System.Management.Automation.ParameterAttribute
-        $Canonical.Mandatory = $true
-        $Canonical.HelpMessage = "Canonical name in FQDN format."
+        $pCanonical = New-Object System.Management.Automation.ParameterAttribute
+        $pCanonical.Mandatory = $true
+        $pCanonical.HelpMessage = "Canonical name in FQDN format."
         
-        $ipv4Address = New-Object System.Management.Automation.ParameterAttribute
-        $ipv4Address.Mandatory = $true
-        $ipv4Address.HelpMessage = "IPv4 address of the new A record"
+        $pipv4Address = New-Object System.Management.Automation.ParameterAttribute
+        $pipv4Address.Mandatory = $true
+        $pipv4Address.HelpMessage = "IPv4 address of the new A record"
         # http://www.powershelladmin.com/wiki/PowerShell_regex_to_accurately_match_IPv4_address_(0-255_only)
         $ipv4Regex = '((?:(?:1\d\d|2[0-5][0-5]|2[0-4]\d|0?[1-9]\d|0?0?\d)\.){3}(?:1\d\d|2[0-5][0-5]|2[0-4]\d|0?[1-9]\d|0?0?\d))'
         $ipv4ValidatePatternAttribute = New-Object System.Management.Automation.ValidatePatternAttribute($ipv4Regex)
 
-        $ipv6Address = New-Object System.Management.Automation.ParameterAttribute
-        $ipv6Address.Mandatory = $true
-        $ipv6Address.HelpMessage = "IPv6 address of the new A record"    
+        $pipv6Address = New-Object System.Management.Automation.ParameterAttribute
+        $pipv6Address.Mandatory = $true
+        $pipv6Address.HelpMessage = "IPv6 address of the new A record"    
         # IPv6 RegEx - http://stackoverflow.com/questions/53497/regular-expression-that-matches-valid-ipv6-addresses
         $ipv6Regex = "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))"
         $ipv6ValidatePatternAttribute = New-Object System.Management.Automation.ValidatePatternAttribute($ipv6Regex)
 
-        $Text = New-Object System.Management.Automation.ParameterAttribute
-        $Text.Mandatory = $true
-        $Text.HelpMessage = "Text associated with the record. It can contain up to 255 bytes per substring, up to a total of 512 bytes."
+        $pText = New-Object System.Management.Automation.ParameterAttribute
+        $pText.Mandatory = $true
+        $pText.HelpMessage = "Text associated with the record. It can contain up to 255 bytes per substring, up to a total of 512 bytes."
         
-        $Port = New-Object System.Management.Automation.ParameterAttribute
-        $Port.Mandatory = $true
-        $Port.HelpMessage = "The port of the record. Valid values are from 0 to 65535 (inclusive), in 32-bit unsigned integer format."
+        $pPort = New-Object System.Management.Automation.ParameterAttribute
+        $pPort.Mandatory = $true
+        $pPort.HelpMessage = "The port of the record. Valid values are from 0 to 65535 (inclusive), in 32-bit unsigned integer format."
         
-        $Priority = New-Object System.Management.Automation.ParameterAttribute
-        $Priority.Mandatory = $true
-        $Priority.HelpMessage = "The priority of the record. Valid values are from 0 to 65535 (inclusive), in 32-bit unsigned integer format."
+        $pPriority = New-Object System.Management.Automation.ParameterAttribute
+        $pPriority.Mandatory = $true
+        $pPriority.HelpMessage = "The priority of the record. Valid values are from 0 to 65535 (inclusive), in 32-bit unsigned integer format."
         
-        $Target = New-Object System.Management.Automation.ParameterAttribute
-        $Target.Mandatory = $true
-        $Target.HelpMessage = "The target of the record in FQDN format."
+        $pTarget = New-Object System.Management.Automation.ParameterAttribute
+        $pTarget.Mandatory = $true
+        $pTarget.HelpMessage = "The target of the record in FQDN format."
         
-        $Weight = New-Object System.Management.Automation.ParameterAttribute
-        $Weight.Mandatory = $true
-        $Weight.HelpMessage = "The weight of the record. Valid values are from 0 to 65535 (inclusive), in 32-bit unsigned integer format."
+        $pWeight = New-Object System.Management.Automation.ParameterAttribute
+        $pWeight.Mandatory = $true
+        $pWeight.HelpMessage = "The weight of the record. Valid values are from 0 to 65535 (inclusive), in 32-bit unsigned integer format."
         
-        $PTRDName = New-Object System.Management.Automation.ParameterAttribute
-        $PTRDName.Mandatory = $true
-        $PTRDName.HelpMessage = "The domain name of the DNS PTR record in FQDN format."
+        $pPTRDName = New-Object System.Management.Automation.ParameterAttribute
+        $pPTRDName.Mandatory = $true
+        $pPTRDName.HelpMessage = "The domain name of the DNS PTR record in FQDN format."
         
-        $MailExchanger = New-Object System.Management.Automation.ParameterAttribute
-        $MailExchanger.Mandatory = $true
-        $MailExchanger.HelpMessage = "Mail exchanger name in FQDN format."
+        $pMailExchanger = New-Object System.Management.Automation.ParameterAttribute
+        $pMailExchanger.Mandatory = $true
+        $pMailExchanger.HelpMessage = "Mail exchanger name in FQDN format."
         
-        $Preference = New-Object System.Management.Automation.ParameterAttribute
-        $Preference.Mandatory = $true
-        $Preference.HelpMessage = "Preference value, 0 to 65535 (inclusive) in 32-bit unsigned integer format."
+        $pPreference = New-Object System.Management.Automation.ParameterAttribute
+        $pPreference.Mandatory = $true
+        $pPreference.HelpMessage = "Preference value, 0 to 65535 (inclusive) in 32-bit unsigned integer format."
         
-        $Order = New-Object System.Management.Automation.ParameterAttribute
-        $Order.Mandatory = $true
-        $Order.HelpMessage = "The order parameter of the NAPTR records. Specifies the order in which NAPTR rules are applied when multiple rules are present (0-65535 inclusive, 32 bit unsigned int)"
+        $pOrder = New-Object System.Management.Automation.ParameterAttribute
+        $pOrder.Mandatory = $true
+        $pOrder.HelpMessage = "The order parameter of the NAPTR records. Specifies the order in which NAPTR rules are applied when multiple rules are present (0-65535 inclusive, 32 bit unsigned int)"
         
-        $Replacement = New-Object System.Management.Automation.ParameterAttribute
-        $Replacement.Mandatory = $true
-        $Replacement.HelpMessage = "For nonterminal NAPTR records, this field specifies the next domain name to look up."
+        $pReplacement = New-Object System.Management.Automation.ParameterAttribute
+        $pReplacement.Mandatory = $true
+        $pReplacement.HelpMessage = "For nonterminal NAPTR records, this field specifies the next domain name to look up."
         
-        $Comment = New-Object System.Management.Automation.ParameterAttribute
-        $Comment.Mandatory = $false
-        $Comment.HelpMessage = "For nonterminal NAPTR records, this field specifies the next domain name to look up."
+        $pComment = New-Object System.Management.Automation.ParameterAttribute
+        $pComment.Mandatory = $false
+        $pComment.HelpMessage = "For nonterminal NAPTR records, this field specifies the next domain name to look up."
         
-        $Disable = New-Object System.Management.Automation.ParameterAttribute
-        $Disable.Mandatory = $false
-        $Disable.HelpMessage = "For nonterminal NAPTR records, this field specifies the next domain name to look up."
+        $pDisable = New-Object System.Management.Automation.ParameterAttribute
+        $pDisable.Mandatory = $false
+        $pDisable.HelpMessage = "For nonterminal NAPTR records, this field specifies the next domain name to look up."
         
         #endregion parameter attribute definitions
         
@@ -167,26 +167,26 @@ Function New-InfoBloxResourceRecord {
             # "A","AAAA","CName","Host","Host_ipv4addr","Host_ipv6addr","LBDN","MX","NAPTR","PTR","SRV","TXT"
             "A"            {
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($ipv4Address)
+                $attributeCollection.Add($pipv4Address)
                 $attributeCollection.Add($ipv4ValidatePatternAttribute)
-                $ipv4Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv4Addr', [string], $attributeCollection)
+                $pipv4Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv4Addr', [string], $attributeCollection)
                 $paramDictionary.Add('IPv4Addr', $ipv4Param)
                 [void]$DynamicParamList.Add("IPv4Addr")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($HostName)
+                $attributeCollection.Add($pHostName)
                 $HostNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Name', [string], $attributeCollection)
                 $paramDictionary.Add('Name', $HostNameParam)
                 [void]$DynamicParamList.Add("Name")
                 
                 
                 # TODO:  Move the declaration of NextAvailableIP up with the rest of the decalarations
-                $NextAvailableIp = New-Object System.Management.Automation.ParameterAttribute
-                $NextAvailableIp.Mandatory = $false
-                $NextAvailableIp.HelpMessage = "Determines if the ipv4Address should be the next available address in the network"
-				$NextAvailableIpAliases = New-Object System.Management.Automation.AliasAttribute -ArgumentList @("NextAvailable", "UseNextAvailable", "NextIP", "NextIPAddress")
+                $pNextAvailableIp = New-Object System.Management.Automation.ParameterAttribute
+                $pNextAvailableIp.Mandatory = $false
+                $pNextAvailableIp.HelpMessage = "Determines if the ipv4Address should be the next available address in the network"
+				$pNextAvailableIpAliases = New-Object System.Management.Automation.AliasAttribute -ArgumentList @("NextAvailable", "UseNextAvailable", "NextIP", "NextIPAddress")
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($NextAvailableIp)
+                $attributeCollection.Add($pNextAvailableIp)
 				$attributeCollection.Add($NextAvailableIpAliases)
                 $NextAvailableIpParam = New-Object System.Management.Automation.RuntimeDefinedParameter('UseNextAvailableIp', [switch], $attributeCollection)
                 $paramDictionary.Add('UseNextAvailableIp', $NextAvailableIpParam)
@@ -209,34 +209,34 @@ Function New-InfoBloxResourceRecord {
                 #>
 
 				# TODO:  Move the declaration of Network up with the rest of the decalarations
-                $Network = New-Object System.Management.Automation.ParameterAttribute
-                $Network.Mandatory = $false
-                $Network.HelpMessage = "Determines the network for the next available address"
+                $pNetwork = New-Object System.Management.Automation.ParameterAttribute
+                $pNetwork.Mandatory = $false
+                $pNetwork.HelpMessage = "Determines the network for the next available address"
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Network)
+                $attributeCollection.Add($pNetwork)
                 $NetworkParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Network', [string], $attributeCollection)
                 $paramDictionary.Add('Network', $NetworkParam)
 				[void]$DynamicParamList.Add("Network")
 
-				$Range = New-Object System.Management.Automation.ParameterAttribute
-                $Range.Mandatory = $false
-                $Range.HelpMessage = "Determines the range for the next available address"
+				$pRange = New-Object System.Management.Automation.ParameterAttribute
+                $pRange.Mandatory = $false
+                $pRange.HelpMessage = "Determines the range for the next available address"
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Range)
+                $attributeCollection.Add($pRange)
                 $RangeParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Range', [string], $attributeCollection)
                 $paramDictionary.Add('Range', $RangeParam)
 				[void]$DynamicParamList.Add("Range")
             }
             "AAAA"        {
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($ipv6Address)
+                $attributeCollection.Add($pipv6Address)
                 $attributeCollection.Add($ipv6ValidatePatternAttribute)
                 $ipv6Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv6Addr', [string], $attributeCollection)
                 $paramDictionary.Add('IPv6Addr', $ipv6Param)
                 [void]$DynamicParamList.Add("IPv6Addr")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($HostName)
+                $attributeCollection.Add($pHostName)
                 $HostNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Name', [string], $attributeCollection)
                 $paramDictionary.Add('Name', $HostNameParam)
                 [void]$DynamicParamList.Add("Name")
@@ -252,13 +252,13 @@ Function New-InfoBloxResourceRecord {
                     -Canonical this is the FQDN of the A (AAAA, etc) record
                 #>
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($HostName)
+                $attributeCollection.Add($pHostName)
                 $HostNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Name', [string], $attributeCollection)
                 $paramDictionary.Add('Name', $HostNameParam)
                 [void]$DynamicParamList.Add("Name")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Canonical)
+                $attributeCollection.Add($pCanonical)
                 $CanonicalParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Canonical', [string], $attributeCollection)
                 $paramDictionary.Add('Canonical', $CanonicalParam)
                 [void]$DynamicParamList.Add("Canonical")
@@ -270,15 +270,15 @@ Function New-InfoBloxResourceRecord {
                     fixed address nodes. The zone must be created first before adding a host record for the zone.
                 #>
 				$attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $ipv4Address.Mandatory = $false        # set this to false, since IPv6 is allowed too
-                $attributeCollection.Add($ipv4Address)
+                $pipv4Address.Mandatory = $false        # set this to false, since IPv6 is allowed too
+                $attributeCollection.Add($pipv4Address)
                 $attributeCollection.Add($ipv4ValidatePatternAttribute)
                 $ipv4Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv4Addr', [string], $attributeCollection)
                 $paramDictionary.Add('IPv4Addr', $ipv4Param)
                 [void]$DynamicParamList.Add("IPv4Addr")
                 
 				$attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $ipv6Address.Mandatory = $false        # set this to false, since IPv4 is allowed too
+                $pipv6Address.Mandatory = $false        # set this to false, since IPv4 is allowed too
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $attributeCollection.Add($ipv6Address)
                 $attributeCollection.Add($ipv6ValidatePatternAttribute)
@@ -287,45 +287,85 @@ Function New-InfoBloxResourceRecord {
                 [void]$DynamicParamList.Add("IPv6Addr")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($HostName)
+                $attributeCollection.Add($pHostName)
                 $HostNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Name', [string], $attributeCollection)
                 $paramDictionary.Add('Name', $HostNameParam)
                 [void]$DynamicParamList.Add("Name")
 
 				 # TODO:  Move the declaration of NextAvailableIP up with the rest of the decalarations
-                $NextAvailableIp = New-Object System.Management.Automation.ParameterAttribute
-                $NextAvailableIp.Mandatory = $false
-                $NextAvailableIp.HelpMessage = "Determines if the ipv4Address should be the next available address in the network"
+                $pNextAvailableIp = New-Object System.Management.Automation.ParameterAttribute
+                $pNextAvailableIp.Mandatory = $false
+                $pNextAvailableIp.HelpMessage = "Determines if the ipv4Address should be the next available address in the network"
 				$NextAvailableIpAliases = New-Object System.Management.Automation.AliasAttribute -ArgumentList @("NextAvailable", "UseNextAvailable", "NextIP", "NextIPAddress")
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($NextAvailableIp)
+                $attributeCollection.Add($pNextAvailableIp)
 				$attributeCollection.Add($NextAvailableIpAliases)
                 $NextAvailableIpParam = New-Object System.Management.Automation.RuntimeDefinedParameter('UseNextAvailableIp', [switch], $attributeCollection)
                 $paramDictionary.Add('UseNextAvailableIp', $NextAvailableIpParam)
 				[void]$DynamicParamList.Add("UseNextAvailableIp")
 
  				# TODO:  Move the declaration of Network up with the rest of the decalarations
-                $Network = New-Object System.Management.Automation.ParameterAttribute
-                $Network.Mandatory = $false
-                $Network.HelpMessage = "Specifies the network to insert the next available address into."
+                $pNetwork = New-Object System.Management.Automation.ParameterAttribute
+                $pNetwork.Mandatory = $false
+                $pNetwork.HelpMessage = "Specifies the network to insert the next available address into."
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Network)
+                $attributeCollection.Add($pNetwork)
                 $NetworkParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Network', [string], $attributeCollection)
                 $paramDictionary.Add('Network', $NetworkParam)
 				[void]$DynamicParamList.Add("Network")
 
-				$Range = New-Object System.Management.Automation.ParameterAttribute
-                $Range.Mandatory = $false
-                $Range.HelpMessage = "Specifies the range to insert the next available address into."
+				$pRange = New-Object System.Management.Automation.ParameterAttribute
+                $pRange.Mandatory = $false
+                $pRange.HelpMessage = "Specifies the range to insert the next available address into."
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Range)
+                $attributeCollection.Add($pRange)
                 $RangeParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Range', [string], $attributeCollection)
                 $paramDictionary.Add('Range', $RangeParam)
 				[void]$DynamicParamList.Add("Range")
+
+				$pConfigureDHCP = New-Object System.Management.Automation.ParameterAttribute
+                $pConfigureDHCP.Mandatory = $false
+                $pConfigureDHCP.HelpMessage = "Specifies that the record should be created with DHCP enabled (MAC address must be on the record, or specified)."
+                $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+                $attributeCollection.Add($pConfigureDHCP)
+                $ConfigureDHCPParam = New-Object System.Management.Automation.RuntimeDefinedParameter('ConfigureDHCP', [switch], $attributeCollection)
+                $paramDictionary.Add('ConfigureDHCP', $ConfigureDHCPParam)
+				[void]$DynamicParamList.Add("ConfigureDHCP")
+
+				$pMacAddress = New-Object System.Management.Automation.ParameterAttribute
+                $pMacAddress.Mandatory = $false
+                $pMacAddress.HelpMessage = "Specifies that the record should be created with DHCP enabled (MAC address must be on the record, or specified)."
+                $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+                $attributeCollection.Add($pMacAddress)
+                $MacAddressParam = New-Object System.Management.Automation.RuntimeDefinedParameter('MacAddress', [string], $attributeCollection)
+                $paramDictionary.Add('MacAddress', $MacAddressParam)
+				[void]$DynamicParamList.Add("MacAddress")
+				<#
+				# JSON for advanced function with excluded IP Addresses.
+				{
+				  "name": "NateTest.datacenter.asp", 
+				  "ipv4addrs": [
+				  {
+					"ipv4addr": {
+					  "_object_function": "next_available_ip", 
+					  "_object": "network", 
+					  "_object_parameters": {
+						"network": "10.232.4.0/23"
+					  }, "_result_field": "ips", 
+					  "_parameters": {
+						"num": 1, 
+						"exclude": ["110.232.4.255"]
+					  }
+					}
+				  }
+				  ]
+				}
+
+				#>
             }
             "Host_ipv4addr"        {
                 #    A Host address in an object used to specify addresses in the record.host object
-                $attributeCollection.Add($ipv4Address)
+                $attributeCollection.Add($pipv4Address)
                 $attributeCollection.Add($ipv4ValidatePatternAttribute)
                 $ipv4Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv4Addr', [string], $attributeCollection)
                 $paramDictionary.Add('IPv4Addr', $ipv4Param)
@@ -334,7 +374,7 @@ Function New-InfoBloxResourceRecord {
             "Host_ipv6addr"        {
                 #    A Host address in an object used to specify addresses in the record.host object
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($ipv6Address)
+                $attributeCollection.Add($pipv6Address)
                 $attributeCollection.Add($ipv6ValidatePatternAttribute)
                 $ipv6Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv6Addr', [string], $attributeCollection)
                 $paramDictionary.Add('IPv6Addr', $ipv6Param)
@@ -347,7 +387,7 @@ Function New-InfoBloxResourceRecord {
                 #>
                 # not mandatory ever, no need to declare false
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Comment)
+                $attributeCollection.Add($pComment)
                 $CommentParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Comment', [string], $attributeCollection)
                 $paramDictionary.Add('Comment', $CommentParam)
                 [void]$DynamicParamList.Add("Comment")
@@ -366,19 +406,19 @@ Function New-InfoBloxResourceRecord {
                     using each mail exchanger. A standard MX record applies to a particular domain or subdomain.
                 #>
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($HostName)
+                $attributeCollection.Add($pHostName)
                 $HostNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Name', [string], $attributeCollection)
                 $paramDictionary.Add('Name', $HostNameParam)
                 [void]$DynamicParamList.Add("Name")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($MailExchanger)
+                $attributeCollection.Add($pMailExchanger)
                 $MailExchangerParam = New-Object System.Management.Automation.RuntimeDefinedParameter('mail_exchanger', [string], $attributeCollection)
                 $paramDictionary.Add('mail_exchanger', $ipv6Param)
                 [void]$DynamicParamList.Add("mail_exchanger")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Preference)
+                $attributeCollection.Add($pPreference)
                 $PreferenceParam = New-Object System.Management.Automation.RuntimeDefinedParameter('preference', [int], $attributeCollection)
                 $paramDictionary.Add('preference', $PreferenceParam)
                 [void]$DynamicParamList.Add("preference")
@@ -389,25 +429,25 @@ Function New-InfoBloxResourceRecord {
                     a regular expression=based rewrite rule that, when applied to an existing string, produces a new domain name or URI.
                 #>
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($HostName)
+                $attributeCollection.Add($pHostName)
                 $HostNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Name', [string], $attributeCollection)
                 $paramDictionary.Add('Name', $HostNameParam)
                 [void]$DynamicParamList.Add("Name")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Order)
+                $attributeCollection.Add($pOrder)
                 $OrderParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Order', [int], $attributeCollection)
                 $paramDictionary.Add('Order', $OrderParam)
                 [void]$DynamicParamList.Add("Order")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Preference)
+                $attributeCollection.Add($pPreference)
                 $PreferenceParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Preference', [int], $attributeCollection)
                 $paramDictionary.Add('Preference', $PreferenceParam)
                 [void]$DynamicParamList.Add("Preference")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Replacement)
+                $attributeCollection.Add($pReplacement)
                 $ReplacementParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Replacement', [string], $attributeCollection)
                 $paramDictionary.Add('Replacement', $ReplacementParam)
                 [void]$DynamicParamList.Add("Replacement")
@@ -419,7 +459,7 @@ Function New-InfoBloxResourceRecord {
                     to a previously defined authoritative reverse-mapping zone.
                 #>
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($HostName)
+                $attributeCollection.Add($pHostName)
                 $HostNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Name', [string], $attributeCollection)
                 $paramDictionary.Add('Name', $HostNameParam)
                 [void]$DynamicParamList.Add("Name")
@@ -427,7 +467,7 @@ Function New-InfoBloxResourceRecord {
                 # records can be ipv6 or ipv4, so we need to set mandatory=$false for this parameter
                 $ipv4Address.Mandatory = $false
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($ipv4Address)
+                $attributeCollection.Add($pipv4Address)
                 $attributeCollection.Add($ipv4ValidatePatternAttribute)
                 $ipv4Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv4Addr', [string], $attributeCollection)
                 $paramDictionary.Add('IPv4Addr', $ipv4Param)
@@ -435,45 +475,45 @@ Function New-InfoBloxResourceRecord {
                 
                 $ipv6Address.Mandatory = $false
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($ipv6Address)
+                $attributeCollection.Add($pipv6Address)
                 $attributeCollection.Add($ipv6ValidatePatternAttribute)
                 $ipv6Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv6Addr', [string], $attributeCollection)
                 $paramDictionary.Add('IPv6Addr', $ipv6Param)
                 [void]$DynamicParamList.Add("IPv6Addr")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($PTRDName)
+                $attributeCollection.Add($pPTRDName)
                 $PTRDNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('PTRDName', [string], $attributeCollection)
                 $paramDictionary.Add('PTRDName', $PTRDNameParam)
                 [void]$DynamicParamList.Add("PTRDName")
             }
             "SRV"        {
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($HostName)
+                $attributeCollection.Add($pHostName)
                 $HostNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Name', [string], $attributeCollection)
                 $paramDictionary.Add('Name', $HostNameParam)
                 [void]$DynamicParamList.Add("Name")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Port)
+                $attributeCollection.Add($pPort)
                 $PortParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Port', [int], $attributeCollection)
                 $paramDictionary.Add('Port', $PortParam)
                 [void]$DynamicParamList.Add("Port")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Priority)
+                $attributeCollection.Add($pPriority)
                 $PriorityParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Priority', [int], $attributeCollection)
                 $paramDictionary.Add('Priority', $PriorityParam)
                 [void]$DynamicParamList.Add("Priority")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Target)
+                $attributeCollection.Add($pTarget)
                 $TargetParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Target', [string], $attributeCollection)
                 $paramDictionary.Add('Target', $TargetParam)
                 [void]$DynamicParamList.Add("Target")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Weight)
+                $attributeCollection.Add($pWeight)
                 $WeightParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Weight', [int], $attributeCollection)
                 $paramDictionary.Add('Weight', $WeightParam)
                 [void]$DynamicParamList.Add("Weight")
@@ -486,13 +526,13 @@ Function New-InfoBloxResourceRecord {
                     a domain name.
                 #>
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($HostName)
+                $attributeCollection.Add($pHostName)
                 $HostNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Name', [string], $attributeCollection)
                 $paramDictionary.Add('Name', $HostNameParam)
                 [void]$DynamicParamList.Add("Name")
                 
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-                $attributeCollection.Add($Text)
+                $attributeCollection.Add($pText)
                 $TextParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Text', [string], $attributeCollection)
                 $paramDictionary.Add('Text', $TextParam)
                 [void]$DynamicParamList.Add("Text")
@@ -552,7 +592,7 @@ Function New-InfoBloxResourceRecord {
 				try { 
 					[void][ipaddress]::Parse($PSBoundParameters["Range"])
 					# This is an IP Address.  Assume it is a start address of the range - lets try to find the range.
-					$RangeObj = Get-InfoBloxRange -StartAddress $PSBoundParameters["Range"]
+					$RangeObj = Get-InfoBloxRange -StartAddress $PSBoundParameters["Range"] -Credential $Credential
 					if ( $null -eq $RangeObj ) {
 						throw "UseNextAvailableIp switch was specified, valid IP address was passed, but was not a valid range or network."
 						return
@@ -574,6 +614,8 @@ Function New-InfoBloxResourceRecord {
 													"num" : 1,
 													"exclude" : ["192.168.1.0"]
 												},
+												"mac":"aa:bb:cc:11:22:21",
+												"configure_for_dhcp": true,
 												"_object_parameters" : {
 													"start_addr" : "192.168.1.0"
 												}
@@ -584,7 +626,7 @@ Function New-InfoBloxResourceRecord {
 						#>
 
 						$IPAddressString = @{
-							 "_object_function" = "next_available_ip"
+							"_object_function" = "next_available_ip"
                             "_object_field" = "ips"
                             "_object" = "range"
                             "_result_field" = "ips"
@@ -634,6 +676,14 @@ Function New-InfoBloxResourceRecord {
 					$SubHash = @{
 						$DynamicParam.ToLower() = $Value
 					}
+					if ( $DynamicParam -eq "ipv4addr") {
+						if ( $PSBoundParameters.ContainsKey("MacAddress")) {
+							$SubHash.Add("mac",$PSBoundParameters["MacAddress"])
+							if ($PSBoundParameters.ContainsKey("ConfigureDHCP")) {
+								$SubHash.Add("configure_for_dhcp",$true)
+							}
+						}
+					}
 					$ParamHash.Add($Parent,[array]$SubHash)  # cast subhash as array, so it has the proper format.
 				}
 				elseif ($DynamicParam -eq "UseNextAvailableIp") {
@@ -641,9 +691,19 @@ Function New-InfoBloxResourceRecord {
 					$SubHash = @{
 						ipv4addr = $IPAddressString
 					}
+
+					if ( $DynamicParam -eq "ipv4addr") {
+						if ( $PSBoundParameters.ContainsKey("MacAddress")) {
+							$SubHash.Add("mac",$PSBoundParameters["MacAddress"])
+							if ($PSBoundParameters.ContainsKey("ConfigureDHCP")) {
+								$SubHash.Add("configure_for_dhcp",$true)
+							}
+						}
+					}
+
 					$ParamHash.Add($Parent,[array]$SubHash)  # cast subhash as array, so it has the proper format.
 				}
-				elseif (@("Network","Range") -contains $DynamicParam ) {
+				elseif (@("Network","Range","ConfigureDHCP","MacAddress") -contains $DynamicParam ) {
 					continue
 				}
 				else {

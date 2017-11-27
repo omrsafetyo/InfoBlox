@@ -111,6 +111,7 @@ Function Get-InfoBloxRange {
     )
     
     BEGIN {
+		Set-TrustAllCertsPolicy
         $AvailableUriOptions = @{
 			"Network" = "network"
 			"StartAddress" = "start_addr"

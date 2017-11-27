@@ -198,6 +198,10 @@ Function Set-InfoBloxResourceRecord {
 		$Add = New-Object System.Management.Automation.ParameterAttribute
         $Add.Mandatory = $false
         $Add.HelpMessage = "For ipv4addr, this will remove the specified IP Address from the list"
+
+		$MacAddress = New-Object System.Management.Automation.ParameterAttribute
+        $MacAddress.Mandatory = $false
+        $MacAddress.HelpMessage = "Specifies that the record should be created with DHCP enabled (MAC address must be on the record, or specified)."
         
         #endregion parameter attribute definitions
         
@@ -312,6 +316,12 @@ Function Set-InfoBloxResourceRecord {
                 $AddParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Add', [switch], $attributeCollection)
                 $paramDictionary.Add('Add', $AddParam)
                 [void]$DynamicParamList.Add("Add")
+
+                $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+                $attributeCollection.Add($MacAddress)
+                $MacAddressParam = New-Object System.Management.Automation.RuntimeDefinedParameter('MacAddress', [string], $attributeCollection)
+                $paramDictionary.Add('MacAddress', $MacAddressParam)
+				[void]$DynamicParamList.Add("MacAddress")
             }
             "Host_ipv4addr"        {
                 #    A Host address in an object used to specify addresses in the record.host object
@@ -503,7 +513,7 @@ Function Set-InfoBloxResourceRecord {
 		}
 		Set-TrustAllCertsPolicy
 		$arrays = @("ipv4addr","ipv6addr","aliases")
-		$skips =  @("Remove","Add")
+		$skips =  @("Remove","Add","MacAddress")
     }
     
     PROCESS {
@@ -536,6 +546,13 @@ Function Set-InfoBloxResourceRecord {
 					$SubHash = @{
 						$DynamicParam.ToLower() = $PSBoundParameters[$DynamicParam]
 					}
+
+					if ( $DynamicParam -eq "ipv4addr") {
+						if ( $PSBoundParameters.ContainsKey("MacAddress")) {
+							$SubHash.Add("mac",$PSBoundParameters["MacAddress"])
+						}
+					}
+
 					$ParamHash.Add($Parent,[array]$SubHash)  # cast subhash as array, so it has the proper format.
 				}
 				elseif ($skips -contains $DynamicParam ) {
