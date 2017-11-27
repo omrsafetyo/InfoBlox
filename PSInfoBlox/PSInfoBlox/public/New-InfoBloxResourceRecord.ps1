@@ -343,24 +343,23 @@ Function New-InfoBloxResourceRecord {
 				<#
 				# JSON for advanced function with excluded IP Addresses.
 				{
-				  "name": "NateTest.datacenter.asp", 
-				  "ipv4addrs": [
-				  {
-					"ipv4addr": {
-					  "_object_function": "next_available_ip", 
-					  "_object": "network", 
-					  "_object_parameters": {
-						"network": "10.232.4.0/23"
-					  }, "_result_field": "ips", 
-					  "_parameters": {
-						"num": 1, 
-						"exclude": ["110.232.4.255"]
+					  "name": "NateTest.datacenter.asp", 
+					  "ipv4addrs": [
+					  {
+						"ipv4addr": {
+						  "_object_function": "next_available_ip", 
+						  "_object": "network", 
+						  "_object_parameters": {
+							"network": "192.168.1.0/23"
+						  }, "_result_field": "ips", 
+						  "_parameters": {
+							"num": 1, 
+							"exclude": ["192.169.1.3"]
+						  }
+						}
 					  }
+					  ]
 					}
-				  }
-				  ]
-				}
-
 				#>
             }
             "Host_ipv4addr"        {
