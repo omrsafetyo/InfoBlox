@@ -83,6 +83,7 @@ Function New-InfoBloxResourceRecord {
         # this array holds a list of the parameter names that are added to the parm block. This is they can 
         # be looped through when creating the JSON object for the body
         $DynamicParamList = New-Object System.Collections.ArrayList
+
         # Dictionary to add to the param block
         $paramDictionary = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
         
@@ -160,6 +161,10 @@ Function New-InfoBloxResourceRecord {
         $pDisable = New-Object System.Management.Automation.ParameterAttribute
         $pDisable.Mandatory = $false
         $pDisable.HelpMessage = "For nonterminal NAPTR records, this field specifies the next domain name to look up."
+
+		$pExclude = New-Object System.Management.Automation.ParameterAttribute
+        $pExclude.Mandatory = $false
+        $pExclude.HelpMessage = "An array or range of IP addresses to exclude. (Single IP address, or e.g. 192.168.1.1-192.168.1.10)"
         
         #endregion parameter attribute definitions
         
@@ -226,7 +231,7 @@ Function New-InfoBloxResourceRecord {
                 $RangeParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Range', [string], $attributeCollection)
                 $paramDictionary.Add('Range', $RangeParam)
 				[void]$DynamicParamList.Add("Range")
-            }
+            } #A
             "AAAA"        {
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $attributeCollection.Add($pipv6Address)
@@ -240,7 +245,7 @@ Function New-InfoBloxResourceRecord {
                 $HostNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Name', [string], $attributeCollection)
                 $paramDictionary.Add('Name', $HostNameParam)
                 [void]$DynamicParamList.Add("Name")
-            }
+            } #AAAA
             "CName"        {
                 <#
                     A CNAME record maps an alias to a canonical name. You can use CNAME records in both forward and IPv4 reverse-mapping zones to serve
@@ -262,13 +267,15 @@ Function New-InfoBloxResourceRecord {
                 $CanonicalParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Canonical', [string], $attributeCollection)
                 $paramDictionary.Add('Canonical', $CanonicalParam)
                 [void]$DynamicParamList.Add("Canonical")
-            }
+            } #CNAME
             "Host"        {
                 <#
                     A host record defines attributes for a node, such as the name-to-address and address-to-name mapping. This alleviates
                     having to specify an A record and a PTR record separately for the same node. A host can also define aliases and DHCP
                     fixed address nodes. The zone must be created first before adding a host record for the zone.
                 #>
+
+				#[string] $IPv4Addr
 				$attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $pipv4Address.Mandatory = $false        # set this to false, since IPv6 is allowed too
                 $attributeCollection.Add($pipv4Address)
@@ -277,6 +284,7 @@ Function New-InfoBloxResourceRecord {
                 $paramDictionary.Add('IPv4Addr', $ipv4Param)
                 [void]$DynamicParamList.Add("IPv4Addr")
                 
+				#[string] $IPv6Addr
 				$attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $pipv6Address.Mandatory = $false        # set this to false, since IPv4 is allowed too
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
@@ -286,6 +294,7 @@ Function New-InfoBloxResourceRecord {
                 $paramDictionary.Add('IPv6Addr', $ipv6Param)
                 [void]$DynamicParamList.Add("IPv6Addr")
                 
+				#[string] $Name
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $attributeCollection.Add($pHostName)
                 $HostNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Name', [string], $attributeCollection)
@@ -293,6 +302,7 @@ Function New-InfoBloxResourceRecord {
                 [void]$DynamicParamList.Add("Name")
 
 				 # TODO:  Move the declaration of NextAvailableIP up with the rest of the decalarations
+				#[switch] $NextAvailableIp
                 $pNextAvailableIp = New-Object System.Management.Automation.ParameterAttribute
                 $pNextAvailableIp.Mandatory = $false
                 $pNextAvailableIp.HelpMessage = "Determines if the ipv4Address should be the next available address in the network"
@@ -305,6 +315,7 @@ Function New-InfoBloxResourceRecord {
 				[void]$DynamicParamList.Add("UseNextAvailableIp")
 
  				# TODO:  Move the declaration of Network up with the rest of the decalarations
+				#[string] $Network
                 $pNetwork = New-Object System.Management.Automation.ParameterAttribute
                 $pNetwork.Mandatory = $false
                 $pNetwork.HelpMessage = "Specifies the network to insert the next available address into."
@@ -314,6 +325,7 @@ Function New-InfoBloxResourceRecord {
                 $paramDictionary.Add('Network', $NetworkParam)
 				[void]$DynamicParamList.Add("Network")
 
+				#[string] $Range
 				$pRange = New-Object System.Management.Automation.ParameterAttribute
                 $pRange.Mandatory = $false
                 $pRange.HelpMessage = "Specifies the range to insert the next available address into."
@@ -323,6 +335,7 @@ Function New-InfoBloxResourceRecord {
                 $paramDictionary.Add('Range', $RangeParam)
 				[void]$DynamicParamList.Add("Range")
 
+				#[switch] $ConfigureDHCP
 				$pConfigureDHCP = New-Object System.Management.Automation.ParameterAttribute
                 $pConfigureDHCP.Mandatory = $false
                 $pConfigureDHCP.HelpMessage = "Specifies that the record should be created with DHCP enabled (MAC address must be on the record, or specified)."
@@ -332,6 +345,7 @@ Function New-InfoBloxResourceRecord {
                 $paramDictionary.Add('ConfigureDHCP', $ConfigureDHCPParam)
 				[void]$DynamicParamList.Add("ConfigureDHCP")
 
+				#[string] $MacAddress
 				$pMacAddress = New-Object System.Management.Automation.ParameterAttribute
                 $pMacAddress.Mandatory = $false
                 $pMacAddress.HelpMessage = "Specifies that the record should be created with DHCP enabled (MAC address must be on the record, or specified)."
@@ -340,28 +354,14 @@ Function New-InfoBloxResourceRecord {
                 $MacAddressParam = New-Object System.Management.Automation.RuntimeDefinedParameter('MacAddress', [string], $attributeCollection)
                 $paramDictionary.Add('MacAddress', $MacAddressParam)
 				[void]$DynamicParamList.Add("MacAddress")
-				<#
-				# JSON for advanced function with excluded IP Addresses.
-				{
-					  "name": "NateTest.datacenter.asp", 
-					  "ipv4addrs": [
-					  {
-						"ipv4addr": {
-						  "_object_function": "next_available_ip", 
-						  "_object": "network", 
-						  "_object_parameters": {
-							"network": "192.168.1.0/23"
-						  }, "_result_field": "ips", 
-						  "_parameters": {
-							"num": 1, 
-							"exclude": ["192.169.1.3"]
-						  }
-						}
-					  }
-					  ]
-					}
-				#>
-            }
+
+				#[string[]] $Exclude
+                $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+                $attributeCollection.Add($pExclude)
+                $ExcludeParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Exclude', [string[]], $attributeCollection)
+                $paramDictionary.Add('Exclude', $ExcludeParam)
+				[void]$DynamicParamList.Add("Exclude")
+            } #Host
             "Host_ipv4addr"        {
                 #    A Host address in an object used to specify addresses in the record.host object
                 $attributeCollection.Add($pipv4Address)
@@ -369,7 +369,7 @@ Function New-InfoBloxResourceRecord {
                 $ipv4Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv4Addr', [string], $attributeCollection)
                 $paramDictionary.Add('IPv4Addr', $ipv4Param)
                 [void]$DynamicParamList.Add("IPv4Addr")
-            }
+            } #Host_ipv4addr
             "Host_ipv6addr"        {
                 #    A Host address in an object used to specify addresses in the record.host object
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
@@ -378,7 +378,7 @@ Function New-InfoBloxResourceRecord {
                 $ipv6Param = New-Object System.Management.Automation.RuntimeDefinedParameter('IPv6Addr', [string], $attributeCollection)
                 $paramDictionary.Add('IPv6Addr', $ipv6Param)
                 [void]$DynamicParamList.Add("IPv6Addr")
-            }
+            } #Host_ipv6addr
             "LBDN"        {
                 <#
                     A Load Balanced Domain Name Record object
@@ -397,7 +397,7 @@ Function New-InfoBloxResourceRecord {
                 $DisableParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Disable', [bool], $attributeCollection)
                 $paramDictionary.Add('Disable', $DisableParam)
                 [void]$DynamicParamList.Add("Disable")
-            }
+            } #LBDN
             "MX"        {
                 <#
                     An MX (mail exchanger) record maps a domain name to a mail exchanger. A mail exchanger is a server that either
@@ -421,7 +421,7 @@ Function New-InfoBloxResourceRecord {
                 $PreferenceParam = New-Object System.Management.Automation.RuntimeDefinedParameter('preference', [int], $attributeCollection)
                 $paramDictionary.Add('preference', $PreferenceParam)
                 [void]$DynamicParamList.Add("preference")
-            }
+            } #MX
             "NAPTR"        {
                 <#
                     a DNS NAPTR object represents a Naming Authority Pointer (NAPTR) resource record. This resource record specifies 
@@ -450,7 +450,7 @@ Function New-InfoBloxResourceRecord {
                 $ReplacementParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Replacement', [string], $attributeCollection)
                 $paramDictionary.Add('Replacement', $ReplacementParam)
                 [void]$DynamicParamList.Add("Replacement")
-            }
+            } #NAPTR
             "PTR"        {
                 <#
                     In a forward-mapping zone, a PTR (pointer) record maps a domain name to another domain name. In a reverse-mapping
@@ -485,7 +485,7 @@ Function New-InfoBloxResourceRecord {
                 $PTRDNameParam = New-Object System.Management.Automation.RuntimeDefinedParameter('PTRDName', [string], $attributeCollection)
                 $paramDictionary.Add('PTRDName', $PTRDNameParam)
                 [void]$DynamicParamList.Add("PTRDName")
-            }
+            } #PTR
             "SRV"        {
                 $attributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
                 $attributeCollection.Add($pHostName)
@@ -516,7 +516,7 @@ Function New-InfoBloxResourceRecord {
                 $WeightParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Weight', [int], $attributeCollection)
                 $paramDictionary.Add('Weight', $WeightParam)
                 [void]$DynamicParamList.Add("Weight")
-            }
+            } #SRV
             "TXT"        {
                 <# 
                     3.127 record:txt : DNS TXT record object.
@@ -535,11 +535,11 @@ Function New-InfoBloxResourceRecord {
                 $TextParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Text', [string], $attributeCollection)
                 $paramDictionary.Add('Text', $TextParam)
                 [void]$DynamicParamList.Add("Text")
-            }
-        }
+            } #TXT
+        } #switch
         
         return $paramDictionary
-    }
+    } #DynamicParam
     
     BEGIN {
         # If Credential was specified, we can use that to initiate the InfoBlox session. 
@@ -567,17 +567,28 @@ Function New-InfoBloxResourceRecord {
 			if ( [string]::IsNullOrEmpty($Uri) -and $PSCmdlet.ParameterSetName -eq "Credential" ) {
 				if ([string]::IsNullOrEmpty($IBServer) -or [string]::IsNullOrEmpty($IBVersion) ) {
 					throw "Unable to determine Uri for IBServer. Specify Uri, or IBVersion and IBServer."
-				}
+				} #if
 				$Uri = "https://{0}/wapi/v{1}" -f $IBServer, $IBVersion
-			}
-		}
+			} #if
+		} #if
 		Set-TrustAllCertsPolicy
 		$arrays = @("ipv4addr","ipv6addr","aliases")
-    }
+		$SpecialProcessingParams = @("Network","Range","ConfigureDHCP","MacAddress","Exclude")
+		$ExcludeExpanded = New-Object System.Collections.ArrayList
+    } #BEGIN
     
     PROCESS {
         # build Url based on the record type
         $ReqUri = "{0}/record:{1}?_return_fields%2b=name,zone,extattrs" -f $Uri, $RecordType.ToLower()    # %2b in place of +
+
+		if ( $PSBoundParameters.ContainsKey("Exclude")) {
+			ForEach ($item in $PSBoundParameters["Exclude"]) {
+				$Expanded = Get-IPsInRange -ipaddress $item
+				ForEach ( $expandedItem in $Expanded ) {
+					[void]$ExcludeExpanded.Add($expandedItem)
+				} #ForEach
+			} #ForEach
+		} #if
 
 		#IPv4Addr - assign this value to either the passed in value for ipv4addr (else) or, if the UseNextAvailableIp switch was used, set it to the next
 		# available IPv4Address in the specified network
@@ -586,7 +597,7 @@ Function New-InfoBloxResourceRecord {
 			Write-Verbose "Using next available IP"
 			if ($PSBoundParameters.ContainsKey("Network")) {
 				$IPAddressString = "func:nextavailableip:{0}" -f $PSBoundParameters["Network"]
-			}
+			} # if 
 			elseif ($PSBoundParameters.ContainsKey("Range")) {
 				try { 
 					[void][ipaddress]::Parse($PSBoundParameters["Range"])
@@ -595,7 +606,7 @@ Function New-InfoBloxResourceRecord {
 					if ( $null -eq $RangeObj ) {
 						throw "UseNextAvailableIp switch was specified, valid IP address was passed, but was not a valid range or network."
 						return
-					}
+					} # if 
 					if ( $RangeObj.start_addr.Split(".")[3] -eq 0 ) {
 						<#
 						How to create a network in a specified RANGE, and skip/exclude a specified IP address - in the even the next available IP
@@ -603,59 +614,63 @@ Function New-InfoBloxResourceRecord {
 						{
 						"name":  "myrecord.mydomain.com",
 						"ipv4addrs":  [
-										  {
-											  "ipv4addr":  {
-												"_object_function" : "next_available_ip",
-												"_object_field" : "ips",
-												"_object" : "range",
-												"_result_field": "ips", 
-												"_parameters" : {
-													"num" : 1,
-													"exclude" : ["192.168.1.0"]
-												},
-												"mac":"aa:bb:cc:11:22:21",
-												"configure_for_dhcp": true,
-												"_object_parameters" : {
-													"start_addr" : "192.168.1.0"
-												}
-											  }
-										  }
-									  ]
+							{
+								"ipv4addr":  {
+								"_object_function" : "next_available_ip",
+								"_object_field" : "ips",
+								"_object" : "range",
+								"_result_field": "ips", 
+								"_parameters" : {
+									"num" : 1,
+									"exclude" : ["192.168.1.0"]
+								},
+								"mac":"aa:bb:cc:11:22:21",
+								"configure_for_dhcp": true,
+								"_object_parameters" : {
+									"start_addr" : "192.168.1.0"
+								}
+								}
+							}
+						]
 						}
-						#>
+						#> 
 
 						$IPAddressString = @{
 							"_object_function" = "next_available_ip"
                             "_object_field" = "ips"
                             "_object" = "range"
                             "_result_field" = "ips"
-						}
+						} #hash ipv4addr
 						# Embdedded hashtable _parameters
+
+						[void]$ExcludeExpanded.Add($RangeObj.start_addr)
 						$_parameters = @{
 							num = 1
-							exclude = [array]$RangeObj.start_addr
-						}
+							exclude = $ExcludeExpanded
+						} #hash
+
 						# Embdedded hashtable _object_parameters
 						$_object_parameters = @{
 							start_addr = $RangeObj.start_addr
-						}
+						} #hash
+
 						#Add the embedded hashtables to the parent
 						$IPAddressString.Add("_parameters",$_parameters)
 						$IPAddressString.Add("_object_parameters",$_object_parameters)
-					}
+					} #if
 					else {
 						$IPAddressString = "func:nextavailableip:{0}-{1}" -f $RangeObj.start_addr, $RangeObj.end_addr
-					}
-				}
+					} #else
+				} #try
 				catch {
 					# not an IP Address
 					$IPAddressString = "func:nextavailableip:{0}" -f $PSBoundParameters["Range"]
-				}
-			}
+				} #catch
+			} # if 
 			else {
 				throw "UseNextAvailableIp switch was specified, but no network or range was specified."
 				return
-			}
+			} # else
 		}
 		elseIf ($RecordType -eq "Host" -and $PSBoundParameters.ContainsKey("ipv4addr")) {
 			Write-Verbose "Using passed ipv4addr"
@@ -666,52 +681,104 @@ Function New-InfoBloxResourceRecord {
         
         # We need to build the JSON Body from the Dynamic Parameters
         $ParamHash = @{}
-        ForEach ( $DynamicParam in $DynamicParamList ) {
-			$Value = $PSBoundParameters[$DynamicParam]
-            if ( $PSBoundParameters.ContainsKey($DynamicParam) ) {
-                # if Host, ip4addr = ipv4addrs array, etc.
-				if ( $arrays -contains $DynamicParam -and $RecordType -eq "Host" ) {
-					$Parent = "{0}s" -f $DynamicParam.ToLower()
-					$SubHash = @{
-						$DynamicParam.ToLower() = $Value
+		if ( $PSBoundParameters.ContainsKey("Exclude") -and $PSBoundParameters.ContainsKey("UseNextAvailableIp") -and $RecordType -eq "Host" -and $PSBoundParameters.ContainsKey("Network")) {
+			<#
+			# JSON for advanced function with excluded IP Addresses.
+			{
+				"name": "myrecord.mydomain.com", 
+				"ipv4addrs": [
+				{
+				"ipv4addr": {
+					"_object_function": "next_available_ip", 
+					"_object": "network", 
+					"_object_parameters": {
+					"network": "192.168.1.0/23"
+					}, "_result_field": "ips", 
+					"_parameters": {
+					"num": 1, 
+					"exclude": ["192.169.1.3"]
 					}
-					if ( $DynamicParam -eq "ipv4addr") {
-						if ( $PSBoundParameters.ContainsKey("MacAddress")) {
-							$SubHash.Add("mac",$PSBoundParameters["MacAddress"])
-							if ($PSBoundParameters.ContainsKey("ConfigureDHCP")) {
-								$SubHash.Add("configure_for_dhcp",$true)
-							}
-						}
-					}
-					$ParamHash.Add($Parent,[array]$SubHash)  # cast subhash as array, so it has the proper format.
 				}
-				elseif ($DynamicParam -eq "UseNextAvailableIp") {
-					$Parent = "ipv4addrs"
-					$SubHash = @{
-						ipv4addr = $IPAddressString
-					}
+				}
+				]
+			}
+			#>
+			$_parameters = @{
+				num = 1
+				exclude = [array]$ExcludeExpanded
+			} #hash
+			$_object_parameters = @{
+				network = $PSBoundParameters["Network"]
+			} #hash
+			$ipv4addrHash = @{
+				"_object_function" = "next_available_ip"
+				"_object" = "network"
+				"_object_parameters" = $_object_parameters
+			} #hash
+			$ipv4addrHash.Add("_parameters",$_parameters)
+			$ipv4addrHash.Add("_result_field","ips")
+			
+			
+			$ipv4addrshash = @{}
+			$ipv4addrsHash.Add("ipv4addr",$ipv4addrHash)
+			if ( $PSBoundParameters.ContainsKey("MacAddress")) {
+				$ipv4addrsHash.Add("mac",$PSBoundParameters["MacAddress"])
+				if ($PSBoundParameters.ContainsKey("ConfigureDHCP")) {
+					$ipv4addrsHash.Add("configure_for_dhcp",$true)
+				} #if 
+			} #if
 
-					if ( $DynamicParam -eq "ipv4addr") {
-						if ( $PSBoundParameters.ContainsKey("MacAddress")) {
-							$SubHash.Add("mac",$PSBoundParameters["MacAddress"])
-							if ($PSBoundParameters.ContainsKey("ConfigureDHCP")) {
-								$SubHash.Add("configure_for_dhcp",$true)
-							}
-						}
-					}
+			$Paramhash.Add("name", $PSBoundParameters["Name"])
+			$ParamHash.Add("ipv4addrs",[array]$ipv4addrshash)
 
-					$ParamHash.Add($Parent,[array]$SubHash)  # cast subhash as array, so it has the proper format.
-				}
-				elseif (@("Network","Range","ConfigureDHCP","MacAddress") -contains $DynamicParam ) {
-					continue
-				}
-				else {
-					$ParamHash.Add($DynamicParam.ToLower(),$PSBoundParameters[$DynamicParam])
-				}
-            }
-        }
-        
-        $JSON = $ParamHash | ConvertTo-Json -Depth 5
+		} #if $PSBoundParameters.ContainsKey("Exclude")
+		else {
+			ForEach ( $DynamicParam in $DynamicParamList ) {
+				$Value = $PSBoundParameters[$DynamicParam]
+				if ( $PSBoundParameters.ContainsKey($DynamicParam) ) {
+					# if Host, ip4addr = ipv4addrs array, etc.
+					if ( $arrays -contains $DynamicParam -and $RecordType -eq "Host" ) {
+						$Parent = "{0}s" -f $DynamicParam.ToLower()
+						$SubHash = @{
+							$DynamicParam.ToLower() = $Value
+						}
+						if ( $DynamicParam -eq "ipv4addr") {
+							if ( $PSBoundParameters.ContainsKey("MacAddress")) {
+								$SubHash.Add("mac",$PSBoundParameters["MacAddress"])
+								if ($PSBoundParameters.ContainsKey("ConfigureDHCP")) {
+									$SubHash.Add("configure_for_dhcp",$true)
+								} #if 
+							} #if 
+						} #if
+						$ParamHash.Add($Parent,[array]$SubHash)  # cast subhash as array, so it has the proper format.
+					} #if
+					elseif ($DynamicParam -eq "UseNextAvailableIp") {
+						$Parent = "ipv4addrs"
+						$SubHash = @{
+							ipv4addr = $IPAddressString
+						} #hash
+
+						if ( $DynamicParam -eq "ipv4addr") {
+							if ( $PSBoundParameters.ContainsKey("MacAddress")) {
+								$SubHash.Add("mac",$PSBoundParameters["MacAddress"])
+								if ($PSBoundParameters.ContainsKey("ConfigureDHCP")) {
+									$SubHash.Add("configure_for_dhcp",$true)
+								} #if
+							} #if
+						} #if
+
+						$ParamHash.Add($Parent,[array]$SubHash)  # cast subhash as array, so it has the proper format.
+					} #elseif
+					elseif ($SpecialProcessingParams -contains $DynamicParam ) {
+						continue
+					} #elseif
+					else {
+						$ParamHash.Add($DynamicParam.ToLower(),$PSBoundParameters[$DynamicParam])
+					} #else
+				} #id
+			} #ForEach
+        } #else
+        $JSON = $ParamHash | ConvertTo-Json -Depth 10
         if ($PSCmdlet.ParameterSetName -eq "Credential" ) {
 			$IRMParams = @{
 				Uri = $ReqUri
@@ -719,8 +786,8 @@ Function New-InfoBloxResourceRecord {
 				Credential = $Credential
 				Body = $JSON
 				ContentType = "application/json"
-			}
-		}
+			} #IRMParams Hash
+		} #if
 		else {
 			$IRMParams = @{
 				Uri = $ReqUri
@@ -728,8 +795,8 @@ Function New-InfoBloxResourceRecord {
 				WebSession = $IBSession
 				Body = $JSON
 				ContentType = "application/json"
-			}
-		}
+			} #IRMParams Hash
+		} #else
 
 		$UsingParameterSet = "Using {0}" -f $PSCmdlet.ParameterSetName
         Write-Verbose $UsingParameterSet
@@ -738,20 +805,27 @@ Function New-InfoBloxResourceRecord {
         
         try {
             $TempResult = Invoke-RestMethod @IRMParams
-        }
+        } #try
         catch {
-            Throw "Error inserting record: $_"
-        }
+			# Compliments to JBOSS https://community.infoblox.com/t5/API-Integration/How-to-create-static-DHCP-record-with-API/td-p/4746
+			$error = $_
+			 if ($error.Exception.Response) {
+				$InfobloxError = $error.Exception.Response.GetResponseStream()
+				$reader = New-Object System.IO.StreamReader($InfobloxError)
+				$responseBody = $reader.ReadToEnd();
+				throw $responseBody
+			}
+        } #catch
         
 
         
         if ( $PassThru ) {
             $TempResult | Add-Member -Type NoteProperty -Name IBSession -Value $IBSession
-        }
+        } #if
         else {
             $TempResult
-        }
-    }
+        } #else
+    } # PROCESS
     
     END {}
 }
